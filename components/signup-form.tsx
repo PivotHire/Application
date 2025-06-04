@@ -187,7 +187,7 @@ export function SignUpForm() {
     return (
         <Card className="w-full max-w-md">
             <CardHeader>
-                <CardTitle className="text-2xl">PivotHire AI Register</CardTitle>
+                <CardTitle className="text-2xl">Register</CardTitle>
                 <CardDescription>
                     Register a new account to start using PivotHire AI.
                 </CardDescription>

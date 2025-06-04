@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 interface MessageProps {
-    sender: "user" | "ai";
+    sender: "user" | "ai" | "system";
     text: string | React.ReactNode;
     avatarSrc?: string;
 }

@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage } from "./message";
 import { Separator } from "@/components/ui/separator";
-import { submitProjectRequirements } from "@/lib/actions";
+import { AlertCircle, SendHorizonal } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import ReactMarkdown from 'react-markdown';
 
 interface ChatbotDialogProps {
     isOpen: boolean;
@@ -23,192 +25,185 @@ interface ChatbotDialogProps {
 
 type Message = {
     id: string;
-    sender: "user" | "ai";
-    text: string | React.ReactNode;
+    role: "user" | "assistant" | "system";
+    text: string;
 };
 
-const initialQuestions = [
-    { id: "projectName", question: "Great! What's the name of your project or task?" },
-    { id: "projectDescription", question: "Could you briefly describe the project?" },
-    { id: "skillsRequired", question: "What specific skills are you looking for in a freelancer? (e.g., React, Python, Graphic Design)" },
-    { id: "budget", question: "Do you have an estimated budget or budget range for this task? (e.g., $500, $1000-$1500, Not sure yet)" },
-    { id: "timeline", question: "What's the desired timeline or deadline for this project?" },
-    { id: "additionalInfo", question: "Is there any other important information or specific requirements you'd like to share?" },
-];
+const mapToApiMessages = (uiMessages: Message[]) => {
+    return uiMessages
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+        .map(msg => ({
+            role: msg.role,
+            content: msg.text
+        }));
+};
 
 export function ChatbotDialog({ isOpen, onOpenChange }: ChatbotDialogProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState("");
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [collectedData, setCollectedData] = useState<Record<string, string>>({});
-    const [isCompleted, setIsCompleted] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAiTyping, setIsAiTyping] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const aiResponseRef = useRef<string>(""); // To build the streaming AI response
 
-    const addMessage = useCallback((sender: "user" | "ai", text: string | React.ReactNode) => {
-        const newMessageId = Date.now().toString() + Math.random().toString(36).substring(2, 7);
-        setMessages((prev) => [...prev, { id: newMessageId, sender, text }]);
+    const addUiMessage = useCallback((role: "user" | "assistant" | "system", text: string, id?: string) => {
+        const newMessageId = id || Date.now().toString() + Math.random().toString(36).substring(2, 7);
+        setMessages((prev) => [...prev, { id: newMessageId, role, text }]);
     }, []);
-    useEffect(() => {
-        if (isOpen) {
-            console.log("ChatbotDialog: isOpen is true. Initializing chat state.");
-            setCollectedData({});
-            setCurrentQuestionIndex(0);
-            setIsCompleted(false);
-            setIsSubmitting(false);
-            setMessages([
-                { id: 'welcome-' + Date.now(), sender: 'ai', text: "Hello! I'm the PivotHire AI assistant. I'll help you define your project needs. Let's get started!" }
-            ]);
-        }
-    }, [isOpen]);
 
     useEffect(() => {
-        if (!isOpen || isCompleted) return;
-
-        const lastMessage = messages[messages.length - 1];
-
-        if (currentQuestionIndex < initialQuestions.length) {
-            const currentQuestionText = initialQuestions[currentQuestionIndex].question;
-            if (messages.length > 0 && lastMessage?.text !== currentQuestionText) {
-                if (
-                    (currentQuestionIndex === 0 && lastMessage?.sender === 'ai' && messages.length === 1) ||
-                    (lastMessage?.sender === 'user')
-                ) {
-                    const timer = setTimeout(() => {
-                        console.log(`ChatbotDialog: Asking question index ${currentQuestionIndex}: "${currentQuestionText}"`);
-                        addMessage("ai", currentQuestionText);
-                    }, lastMessage?.sender === 'user' ? 700 : 500);
-                    return () => clearTimeout(timer);
-                }
-            }
-        } else if (currentQuestionIndex >= initialQuestions.length && Object.keys(collectedData).length >= initialQuestions.length) {
-            const summaryAlreadyShown = messages.some(msg => msg.id === 'summary-message');
-            if (!summaryAlreadyShown) {
-                console.log("ChatbotDialog: All questions answered, preparing summary.");
-                const summaryText = (
-                    <div>
-                        <p className="font-semibold">Thanks! Here's a summary of your requirements:</p>
-                        <ul className="my-2 list-disc pl-5">
-                            {Object.entries(collectedData).map(([key, value]) => {
-                                const questionLabel = initialQuestions.find(q => q.id === key)?.question.split(/[\s?:]+/)[0] || key;
-                                return <li key={key}><strong>{questionLabel}:</strong> {value}</li>
-                            })}
-                        </ul>
-                        <p>If this looks correct, I'll submit it. Otherwise, you can close this and start over.</p>
-                    </div>
-                );
-                setMessages((prev) => [...prev, { id: 'summary-message', sender: 'ai', text: summaryText }]);
-                setIsCompleted(true);
-            }
+        if (isOpen && messages.length === 0) {
+            setIsAiTyping(true);
+            setError(null);
+            addUiMessage("assistant", "Hello! I'm PivotHire AI. How can I help you define your project needs today?");
+            setIsAiTyping(false);
+        } else if (!isOpen) {
+            // setMessages([]);
+            aiResponseRef.current = "";
         }
-    }, [isOpen, currentQuestionIndex, messages, isCompleted, collectedData, initialQuestions, addMessage]);
+    }, [isOpen, addUiMessage, messages.length]);
 
     useEffect(() => {
-        if (scrollAreaRef.current) {
-            const scrollableViewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
-            if (scrollableViewport) {
-                setTimeout(() => {
-                    scrollableViewport.scrollTop = scrollableViewport.scrollHeight;
-                }, 50);
-            }
+        const scrollableViewport = scrollAreaRef.current?.querySelector('div:first-child');
+        if (scrollableViewport) {
+            scrollableViewport.scrollTop = scrollableViewport.scrollHeight;
         }
-    }, [messages]);
+    }, [messages, isAiTyping]);
 
-    const handleUserInput = async () => {
-        if (!inputValue.trim() || isCompleted || isSubmitting || currentQuestionIndex >= initialQuestions.length) {
-            return;
-        }
+    const handleSendMessage = async () => {
+        if (!inputValue.trim() || isAiTyping) return;
 
-        addMessage("user", inputValue);
-        const currentQuestionId = initialQuestions[currentQuestionIndex].id;
-
-        setCollectedData((prev) => ({ ...prev, [currentQuestionId]: inputValue.trim() }));
+        const userMessageText = inputValue.trim();
+        addUiMessage("user", userMessageText);
         setInputValue("");
+        setIsAiTyping(true);
+        setError(null);
+        aiResponseRef.current = "";
 
-        setCurrentQuestionIndex((prev) => prev + 1);
-    };
-
-    const handleSubmitRequirements = async () => {
-        if (!isCompleted || isSubmitting) return;
-        setIsSubmitting(true);
-        addMessage("ai", "Submitting your requirements...");
+        const currentConversation = [...messages, { id: 'temp-user', role: 'user' as const, text: userMessageText }];
+        const apiMessagesPayload = mapToApiMessages(currentConversation);
 
         try {
-            const result = await submitProjectRequirements(collectedData);
-            console.log("Submission result:", result);
-            addMessage("ai", `Successfully submitted! Our backend AI will now process this. Reference ID: ${result.taskId || 'N/A'}`);
-            setTimeout(() => onOpenChange(false), 3000);
-        } catch (error) {
-            console.error("Submission error:", error);
-            addMessage("ai", "Sorry, there was an error submitting your requirements. Please try again later.");
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: apiMessagesPayload }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `API request failed with status ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) {
+                throw new Error("Could not get reader for response body.");
+            }
+            const decoder = new TextDecoder();
+            let done = false;
+            let firstChunk = true;
+            let aiMessageId: string | undefined;
+
+            while (!done) {
+                const { value, done: streamDone } = await reader.read();
+                done = streamDone;
+                if (value) {
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n\n').filter(line => line.startsWith('data:'));
+
+                    for (const line of lines) {
+                        const content = line.substring(6).trim();
+                        if (content) {
+                            aiResponseRef.current += content;
+                            if (firstChunk) {
+                                const newMessage = { id: Date.now().toString() + Math.random().toString(36).substring(2, 7), role: 'assistant' as const, text: aiResponseRef.current };
+                                setMessages(prevMessages => [...prevMessages, newMessage]);
+                                aiMessageId = newMessage.id;
+                                firstChunk = false;
+                            } else if (aiMessageId) {
+                                setMessages(prevMessages =>
+                                    prevMessages.map(msg =>
+                                        msg.id === aiMessageId ? { ...msg, text: aiResponseRef.current } : msg
+                                    )
+                                );
+                            }
+                        }
+                    }
+                }
+                if (done) {
+                    setIsAiTyping(false);
+                }
+            }
+
+        } catch (err: any) {
+            console.error("Failed to send message or get AI reply:", err);
+            setError(err.message || "Failed to connect to the AI assistant. Please try again.");
+            setIsAiTyping(false);
+            addUiMessage("system", `Error: ${err.message || "Could not connect to the AI."}`);
         } finally {
-            setIsSubmitting(false);
+            if (isAiTyping) {
+                setIsAiTyping(false);
+            }
         }
     };
 
-    const handleDialogClose = (openState: boolean) => {
-        if (!openState) {
-            console.log("ChatbotDialog: Dialog closing. Resetting chat state for next open.");
-        }
-        onOpenChange(openState);
-    }
-
-
     return (
-        <Dialog open={isOpen} onOpenChange={handleDialogClose}>
-            <DialogContent className="max-w-2xl flex flex-col h-[80vh] sm:h-[calc(100vh-4rem)]">
-                <DialogHeader>
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl flex flex-col h-[80vh] sm:h-[calc(100vh-8rem)]">
+                <DialogHeader className="flex-shrink-0">
                     <DialogTitle>PivotHire AI Assistant</DialogTitle>
                     <DialogDescription>
-                        Let's define your project needs. Answer the questions below.
+                        Describe your project needs, and I'll help you get started.
                     </DialogDescription>
                 </DialogHeader>
-                <Separator />
-                <ScrollArea className="flex-grow p-1 pr-4 -mr-2" ref={scrollAreaRef}>
-                    <div className="space-y-4 py-4 px-1">
+                <Separator className="flex-shrink-0" />
+                <ScrollArea
+                    className="flex-grow basis-0 min-h-0"
+                    ref={scrollAreaRef}
+                >
+                    <div className="p-4 space-y-4">
                         {messages.map((msg) => (
-                            <ChatMessage key={msg.id} sender={msg.sender} text={msg.text} />
+                            <ChatMessage key={msg.id} sender={msg.role === 'assistant' ? 'ai' : msg.role} text={<ReactMarkdown>{msg.text}</ReactMarkdown>} />
                         ))}
+                        {isAiTyping && (
+                            <ChatMessage key="typing" sender="ai" text={
+                                <div className="flex items-center space-x-1">
+                                    <span className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.3s]"></span>
+                                    <span className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.15s]"></span>
+                                    <span className="h-2 w-2 bg-primary rounded-full animate-pulse"></span>
+                                </div>
+                            } />
+                        )}
                     </div>
                 </ScrollArea>
-                <Separator />
-                <DialogFooter className="pt-4 sm:justify-between">
-                    {isCompleted ? (
-                        <div className="flex w-full flex-col sm:flex-row gap-2">
-                            <Button onClick={() => {
-                                setIsCompleted(false);
-                                setCurrentQuestionIndex(0);
-                                setCollectedData({});
-                                setMessages(prev => prev.slice(0,1));
-                            }} variant="outline" className="flex-1 order-2 sm:order-1">
-                                Start Over
-                            </Button>
-                            <Button onClick={handleSubmitRequirements} disabled={isSubmitting} className="flex-1 order-1 sm:order-2">
-                                {isSubmitting ? "Submitting..." : "Confirm & Submit"}
-                            </Button>
-                        </div>
-                    ) : (
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                handleUserInput();
-                            }}
-                            className="flex w-full items-center space-x-2"
-                        >
-                            <Input
-                                placeholder="Type your answer..."
-                                value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                disabled={isCompleted || currentQuestionIndex >= initialQuestions.length || messages[messages.length-1]?.sender === 'ai'} // Disable if AI is "typing"
-                                className="flex-1"
-                                aria-label="Chat input"
-                            />
-                            <Button type="submit" disabled={!inputValue.trim() || isCompleted || currentQuestionIndex >= initialQuestions.length || messages[messages.length-1]?.sender === 'ai'}>
-                                Send
-                            </Button>
-                        </form>
-                    )}
+                {error && (
+                    <div className="px-6 pt-2 flex-shrink-0">
+                        <Alert variant="destructive" className="my-2">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    </div>
+                )}
+                <Separator className="flex-shrink-0" />
+                <DialogFooter className="pt-4 flex-shrink-0">
+                    <form
+                        onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
+                        className="flex w-full items-center space-x-2"
+                    >
+                        <Input
+                            placeholder={isAiTyping ? "AI is typing..." : "Type your message..."}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            disabled={isAiTyping}
+                            className="flex-1"
+                            aria-label="Chat input"
+                        />
+                        <Button type="submit" disabled={!inputValue.trim() || isAiTyping} size="icon">
+                            <SendHorizonal className="h-4 w-4" />
+                            <span className="sr-only">Send</span>
+                        </Button>
+                    </form>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

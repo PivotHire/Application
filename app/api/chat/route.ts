@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import {NextRequest, NextResponse} from 'next/server';
 import OpenAI from 'openai';
-import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import {ChatCompletionMessageParam} from 'openai/resources/chat/completions';
 
 if (!process.env.OPENAI_API_KEY) {
     console.error("FATAL ERROR: OPENAI_API_KEY is not set in environment variables.");
@@ -14,7 +14,7 @@ export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
     if (!process.env.OPENAI_API_KEY) {
-        return NextResponse.json({ error: 'Server configuration error: Missing API key.' }, { status: 500 });
+        return NextResponse.json({error: 'Server configuration error: Missing API key.'}, {status: 500});
     }
 
     try {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         const incomingMessages: ChatCompletionMessageParam[] = body.messages;
 
         if (!incomingMessages || !Array.isArray(incomingMessages) || incomingMessages.length === 0) {
-            return NextResponse.json({ error: 'Messages are required and must be a non-empty array.' }, { status: 400 });
+            return NextResponse.json({error: 'Messages are required and must be a non-empty array.'}, {status: 400});
         }
 
         const systemMessage: ChatCompletionMessageParam = {
@@ -39,6 +39,23 @@ export async function POST(req: NextRequest) {
             6. Any other important information or specific needs.
             Once you have a good understanding, you can offer to summarize the details. 
             Avoid making up information if the user hasn't provided it.
+            
+            VERY IMPORTANT MARKDOWN FORMATTING RULES:
+            1.  You MUST ALWAYS provide your responses in Markdown format.
+            2.  Headings (e.g., ## My Heading) MUST start on a new line. To ensure this, place a newline character ('\\n') before the heading.
+            3.  List items (e.g., - My Item or * My Item or 1. My Item) MUST EACH start on a new line. Place a newline character ('\\n') before each list item.
+                Example of a CORRECT list:
+                Here are the items:
+                - First item
+                - Second item
+                - Third item
+                Example of an INCORRECT list (DO NOT DO THIS):
+                Here are the items:- First item- Second item- Third item
+            4.  Paragraphs MUST be separated by a blank line. This means you MUST use two newline characters ('\\n\\n') between paragraphs.
+            5.  Ensure any code blocks are properly fenced with triple backticks, also starting on new lines.
+            
+            Strictly adhere to these formatting rules for all Markdown elements to ensure readability. Failure to use newlines correctly will result in poorly formatted output.
+                
             For now, let's start the conversation to gather these details.
             (Later, you might be asked to provide this information in a structured JSON format, but for now, focus on the conversation.)`
         };
@@ -64,7 +81,8 @@ export async function POST(req: NextRequest) {
                 for await (const chunk of stream) {
                     const content = chunk.choices?.[0]?.delta?.content || '';
                     if (content) {
-                        controller.enqueue(`data: ${content}\n\n`);
+                        const processedContent = content.replace(/\\n/g, '\n');
+                        controller.enqueue(`data: ${processedContent}\n\n`);
                     }
                 }
                 controller.close();
@@ -98,6 +116,6 @@ export async function POST(req: NextRequest) {
             errorMessage = error.message;
         }
 
-        return NextResponse.json({ error: errorMessage }, { status: statusCode });
+        return NextResponse.json({error: errorMessage}, {status: statusCode});
     }
 }

@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { AlertCircle, SendHorizonal } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
 
 interface ChatbotDialogProps {
     isOpen: boolean;
@@ -59,7 +60,7 @@ export function ChatbotDialog({ isOpen, onOpenChange }: ChatbotDialogProps) {
             addUiMessage("assistant", "Hello! I'm PivotHire AI. How can I help you define your project needs today?");
             setIsAiTyping(false);
         } else if (!isOpen) {
-            // setMessages([]);
+            setMessages([]);
             aiResponseRef.current = "";
         }
     }, [isOpen, addUiMessage, messages.length]);
@@ -113,7 +114,7 @@ export function ChatbotDialog({ isOpen, onOpenChange }: ChatbotDialogProps) {
                     const lines = chunk.split('\n\n').filter(line => line.startsWith('data:'));
 
                     for (const line of lines) {
-                        const content = line.substring(6).trim();
+                        const content = line.substring(6);
                         if (content) {
                             aiResponseRef.current += content;
                             if (firstChunk) {
@@ -164,7 +165,7 @@ export function ChatbotDialog({ isOpen, onOpenChange }: ChatbotDialogProps) {
                 >
                     <div className="p-4 space-y-4">
                         {messages.map((msg) => (
-                            <ChatMessage key={msg.id} sender={msg.role === 'assistant' ? 'ai' : msg.role} text={<ReactMarkdown>{msg.text}</ReactMarkdown>} />
+                            <ChatMessage key={msg.id} sender={msg.role === 'assistant' ? 'ai' : msg.role} text={<ReactMarkdown remarkPlugins={[remarkBreaks]}>{msg.text}</ReactMarkdown>} />
                         ))}
                         {isAiTyping && (
                             <ChatMessage key="typing" sender="ai" text={

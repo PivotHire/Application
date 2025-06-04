@@ -124,3 +124,5 @@
 [data-radix-scroll-area-viewport] {
   scroll-behavior: smooth;
 }
+
+.chat-message-content { white-space: pre-wrap; }

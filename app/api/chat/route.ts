@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server';
 import OpenAI from 'openai';
 import {ChatCompletionMessageParam} from 'openai/resources/chat/completions';
+import {submitProjReqTool} from "@/lib/submitProjReqTool";
 
 if (!process.env.OPENAI_API_KEY) {
     console.error("FATAL ERROR: OPENAI_API_KEY is not set in environment variables.");
@@ -27,9 +28,11 @@ export async function POST(req: NextRequest) {
 
         const systemMessage: ChatCompletionMessageParam = {
             role: 'system',
-            content: `You are PivotHire AI, an intelligent assistant for a freelancing platform. 
+            content: `You are PivotHire AI, an intelligent assistant for a revolutionary AI-driven freelancing platform.
+            
             Your primary goal is to engage the user (a business representative) in a natural conversation to understand their project requirements. 
             Ask clarifying questions when necessary. Be friendly, professional, and helpful.
+            
             Encourage the user to provide details about:
             1. Project Name/Title
             2. Detailed Project Description
@@ -41,10 +44,11 @@ export async function POST(req: NextRequest) {
             Avoid making up information if the user hasn't provided it.
             
             For now, let's start the conversation to gather these details.
-            (Later, you might be asked to provide this information in a structured JSON format, but for now, focus on the conversation.)`
+            
+            After you figure out all the information and confirm with the user, you will call the submitProjectRequirements function with the gathered data.`
         };
 
-        const MAX_MESSAGES_TO_RETAIN = 10;
+        const MAX_MESSAGES_TO_RETAIN = 50;
         const conversationHistory = incomingMessages.slice(-MAX_MESSAGES_TO_RETAIN);
 
         const messagesForAPI: ChatCompletionMessageParam[] = [
@@ -55,6 +59,8 @@ export async function POST(req: NextRequest) {
         const stream = await openai.chat.completions.create({
             model: "gpt-4.1-nano",
             messages: messagesForAPI,
+            tools: [submitProjReqTool],
+            tool_choice: 'auto',
             temperature: 0.5,
             max_completion_tokens: 500,
             stream: true,

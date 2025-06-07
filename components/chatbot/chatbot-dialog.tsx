@@ -147,8 +147,8 @@ export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
                 (err: any) {
                 console.error("Failed to send message or get AI reply:", err);
                 setError(err.message || "Failed to connect to the AI assistant. Please try again.");
-                setIsAiTyping(false);
                 addUiMessage("system", `Error: ${err.message || "Could not connect to the AI."}`);
+                setIsAiTyping(false);
             } finally {
                 setIsAiTyping(false);
             }

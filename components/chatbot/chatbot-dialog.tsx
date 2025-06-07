@@ -174,7 +174,7 @@ export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
                 >
                     <div className="p-4 space-y-4">
                         {messages.map((msg) => {
-                            console.log("Raw msg.text for Markdown:", JSON.stringify(msg.text))
+                            // console.log("Raw msg.text for Markdown:", JSON.stringify(msg.text))
                             return (< ChatMessage
                                 key={msg.id}
                                 sender={msg.role === 'assistant' ? 'ai' : msg.role}

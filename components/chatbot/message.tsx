@@ -24,7 +24,7 @@ export function ChatMessage({ sender, text, avatarSrc }: MessageProps) {
             )}
             <div
                 className={cn(
-                    "max-w-[70%] rounded-lg p-3 text-sm shadow-sm chat-message-content",
+                    "max-w-[80%] rounded-lg p-3 text-sm shadow-sm chat-message-content",
                     isUser
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted"

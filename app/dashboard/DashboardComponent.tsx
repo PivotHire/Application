@@ -1,15 +1,15 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import { Button } from "@/components/ui/button";
-import { ChatbotDialog } from "@/components/chatbot/chatbot-dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import {Button} from "@/components/ui/button";
+import {ChatbotDialog} from "@/components/chatbot/chatbot-dialog";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {useRouter} from "next/navigation";
 import Image from "next/image";
 import {authClient} from "@/lib/auth-client";
 
-const { data: session } = await authClient.getSession();
+const {data: session} = await authClient.getSession();
 
 export default function DashboardComponent() {
     const [isChatbotOpen, setIsChatbotOpen] = useState(false);
@@ -65,7 +65,7 @@ export default function DashboardComponent() {
                     {user && (
                         <div className="flex items-center gap-2">
                             <Avatar className="h-9 w-9">
-                                <AvatarImage src={user.image || undefined} alt={displayName} />
+                                <AvatarImage src={user.image || undefined} alt={displayName}/>
                                 <AvatarFallback>{userInitials}</AvatarFallback>
                             </Avatar>
                             <div className="text-sm">
@@ -81,10 +81,11 @@ export default function DashboardComponent() {
             <Card>
                 <CardHeader>
                     <CardTitle>Welcome, {user?.name || "User"}!</CardTitle>
-                    <CardDescription>Manage your projects and find the best AI talent.</CardDescription>
+                    <CardDescription>Manage your projects and find the best talent.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="mb-6">Ready to start a new project? Click the button below to describe your needs to our AI assistant.</p>
+                    <p className="mb-6">Ready to start a new project? Click the button below to describe your needs to
+                        our AI assistant.</p>
                     <Button onClick={() => setIsChatbotOpen(true)} size="lg">
                         Publish New Task
                     </Button>

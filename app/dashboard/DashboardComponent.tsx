@@ -95,6 +95,7 @@ export default function DashboardComponent() {
             <ChatbotDialog
                 isOpen={isChatbotOpen}
                 onOpenChange={setIsChatbotOpen}
+                avatarSrc={user?.image || undefined}
             />
         </div>
     );

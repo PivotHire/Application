@@ -22,6 +22,7 @@ import remarkBreaks from 'remark-breaks';
 interface ChatbotDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
+    avatarSrc?: string;
 }
 
 type Message = {
@@ -39,7 +40,7 @@ const mapToApiMessages = (uiMessages: Message[]) => {
         }));
 };
 
-export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
+export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState("");
     const [isAiTyping, setIsAiTyping] = useState(false);
@@ -177,6 +178,7 @@ export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
                                 text={
                                     <ReactMarkdown remarkPlugins={[remarkBreaks]}>{msg.text}</ReactMarkdown>
                                 }
+                                avatarSrc={avatarSrc}
                             />)
                         })}
                         {isAiTyping && (

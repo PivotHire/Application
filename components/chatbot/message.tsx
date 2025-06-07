@@ -1,5 +1,5 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {cn} from "@/lib/utils";
 
 interface MessageProps {
     sender: "user" | "ai" | "system";
@@ -7,7 +7,7 @@ interface MessageProps {
     avatarSrc?: string;
 }
 
-export function ChatMessage({ sender, text, avatarSrc }: MessageProps) {
+export function ChatMessage({sender, text, avatarSrc}: MessageProps) {
     const isUser = sender === "user";
     return (
         <div
@@ -18,7 +18,7 @@ export function ChatMessage({ sender, text, avatarSrc }: MessageProps) {
         >
             {!isUser && (
                 <Avatar className="h-8 w-8">
-                    <AvatarImage src={avatarSrc || "/placeholder-bot.jpg"} alt="AI Avatar" />
+                    <AvatarImage src={"/placeholder-bot.jpg"} alt="AI Avatar"/>
                     <AvatarFallback>AI</AvatarFallback>
                 </Avatar>
             )}
@@ -34,7 +34,8 @@ export function ChatMessage({ sender, text, avatarSrc }: MessageProps) {
             </div>
             {isUser && (
                 <Avatar className="h-8 w-8">
-                    <AvatarFallback>U</AvatarFallback>
+                    {avatarSrc ? <AvatarImage src={avatarSrc} alt="User Avatar"/> :
+                        <AvatarFallback>U</AvatarFallback>}
                 </Avatar>
             )}
         </div>

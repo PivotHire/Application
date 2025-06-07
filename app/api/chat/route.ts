@@ -40,22 +40,6 @@ export async function POST(req: NextRequest) {
             Once you have a good understanding, you can offer to summarize the details. 
             Avoid making up information if the user hasn't provided it.
             
-            VERY IMPORTANT MARKDOWN FORMATTING RULES:
-            1.  You MUST ALWAYS provide your responses in Markdown format.
-            2.  Headings (e.g., ## My Heading) MUST start on a new line. To ensure this, place a newline character ('\\n') before the heading.
-            3.  List items (e.g., - My Item or * My Item or 1. My Item) MUST EACH start on a new line. Place a newline character ('\\n') before each list item.
-                Example of a CORRECT list:
-                Here are the items:
-                - First item
-                - Second item
-                - Third item
-                Example of an INCORRECT list (DO NOT DO THIS):
-                Here are the items:- First item- Second item- Third item
-            4.  Paragraphs MUST be separated by a blank line. This means you MUST use two newline characters ('\\n\\n') between paragraphs.
-            5.  Ensure any code blocks are properly fenced with triple backticks, also starting on new lines.
-            
-            Strictly adhere to these formatting rules for all Markdown elements to ensure readability. Failure to use newlines correctly will result in poorly formatted output.
-                
             For now, let's start the conversation to gather these details.
             (Later, you might be asked to provide this information in a structured JSON format, but for now, focus on the conversation.)`
         };
@@ -78,14 +62,19 @@ export async function POST(req: NextRequest) {
 
         const readableStream = new ReadableStream({
             async pull(controller) {
-                for await (const chunk of stream) {
-                    const content = chunk.choices?.[0]?.delta?.content || '';
-                    if (content) {
-                        const processedContent = content.replace(/\\n/g, '\n');
-                        controller.enqueue(`data: ${processedContent}\n\n`);
+                try {
+                    for await (const chunk of stream) {
+                        const content = chunk.choices?.[0]?.delta?.content || '';
+                        if (content) {
+                            controller.enqueue(`data: ${content}\n\n`);
+                        }
                     }
+                } catch (error: unknown) {
+                    console.error("An error occurred during the OpenAI stream:", error);
+                    controller.error(error);
+                } finally {
+                    controller.close();
                 }
-                controller.close();
             },
         });
 

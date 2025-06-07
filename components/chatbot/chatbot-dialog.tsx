@@ -45,7 +45,7 @@ export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
     const [isAiTyping, setIsAiTyping] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const aiResponseRef = useRef<string>(""); // To build the streaming AI response
 
     const addUiMessage = useCallback((role: "user" | "assistant" | "system", text: string, id?: string) => {
@@ -66,10 +66,7 @@ export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
     }, [isOpen, addUiMessage, messages.length]);
 
     useEffect(() => {
-        const scrollableViewport = scrollAreaRef.current?.querySelector('div:first-child');
-        if (scrollableViewport) {
-            scrollableViewport.scrollTop = scrollableViewport.scrollHeight;
-        }
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isAiTyping]);
 
     const handleSendMessage = async () => {
@@ -170,7 +167,6 @@ export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
                 <Separator className="flex-shrink-0"/>
                 <ScrollArea
                     className="flex-grow basis-0 min-h-0"
-                    ref={scrollAreaRef}
                 >
                     <div className="p-4 space-y-4">
                         {messages.map((msg) => {
@@ -194,6 +190,7 @@ export function ChatbotDialog({isOpen, onOpenChange}: ChatbotDialogProps) {
                                 </div>
                             }/>
                         )}
+                        <div ref={messagesEndRef} />
                     </div>
                 </ScrollArea>
                 {error && (

@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useAuth } from '@/components/auth-provider';
+// import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
+import { authClient } from '@/lib/auth-client';
+
+const { data: session } = await authClient.getSession();
 
 export default function HomePage() {
-    const { isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
+    const isAuthenticated = session?.user !== undefined;
+    const isLoading = session === undefined;
 
     useEffect(() => {
         if (!isLoading) {

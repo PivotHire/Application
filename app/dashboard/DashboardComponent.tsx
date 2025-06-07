@@ -1,27 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { Button } from "@/components/ui/button";
 import { ChatbotDialog } from "@/components/chatbot/chatbot-dialog";
-import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import {authClient} from "@/lib/auth-client";
+
+const { data: session } = await authClient.getSession();
 
 export default function DashboardComponent() {
     const [isChatbotOpen, setIsChatbotOpen] = useState(false);
-    const { user, logout, isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
+    const isAuthenticated = session?.user !== undefined;
+    const user = session?.user || null;
+    const isLoading = session === undefined;
+    const [loadingMsg, setLoadingMsg] = useState("Loading dashboard...");
 
-    if (isLoading) {
-        return <div className="flex h-screen items-center justify-center"><p>Loading dashboard...</p></div>;
-    }
+    console.log(session);
 
-    if (!isAuthenticated) {
-        router.push('/signin');
-        return <div className="flex h-screen items-center justify-center"><p>Redirecting to sign in...</p></div>;
-    }
+    useEffect(() => {
+        if (isLoading) {
+            setLoadingMsg("Loading dashboard...");
+        }
+
+        if (!isAuthenticated) {
+            router.push('/signin');
+            setLoadingMsg("Redirecting to sign in...");
+        }
+    }, [session]);
 
     const getInitials = (name?: string | null, fallback = "U") => {
         if (!name) return fallback;
@@ -32,9 +41,14 @@ export default function DashboardComponent() {
         return name.substring(0, 2).toUpperCase();
     };
 
-    const displayName = user?.nick_name || user?.username || "User";
+    const displayName = user?.name || "User";
     const userInitials = getInitials(displayName, user?.email?.[0]?.toUpperCase() || "P");
 
+    if (isLoading || !isAuthenticated) {
+        return (
+            <div className="flex h-screen items-center justify-center"><p>{loadingMsg}</p></div>
+        )
+    }
 
     return (
         <div className="container mx-auto p-2 md:p-4">
@@ -51,7 +65,7 @@ export default function DashboardComponent() {
                     {user && (
                         <div className="flex items-center gap-2">
                             <Avatar className="h-9 w-9">
-                                <AvatarImage src={user.avatar_url || undefined} alt={displayName} />
+                                <AvatarImage src={user.image || undefined} alt={displayName} />
                                 <AvatarFallback>{userInitials}</AvatarFallback>
                             </Avatar>
                             <div className="text-sm">
@@ -60,13 +74,13 @@ export default function DashboardComponent() {
                             </div>
                         </div>
                     )}
-                    <Button onClick={logout} variant="outline">Logout</Button>
+                    <Button variant="outline">Logout</Button>
                 </div>
             </header>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Welcome, {user?.nick_name || user?.username || "User"}!</CardTitle>
+                    <CardTitle>Welcome, {user?.name || "User"}!</CardTitle>
                     <CardDescription>Manage your projects and find the best AI talent.</CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import {useState} from "react";
+import {Button} from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -10,13 +10,12 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "./auth-provider";
-import { useRouter } from 'next/navigation';
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {useRouter} from 'next/navigation';
+import {authClient} from "@/lib/auth-client";
 
 export function SignInForm() {
-    const { login, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -28,13 +27,26 @@ export function SignInForm() {
         setError(null);
         setIsSubmitting(true);
 
-        const result = await login(email, password);
+        const {data, error} = await authClient.signIn.email({
+            email: email,
+            password: password,
+            callbackURL: "/dashboard",
+        });
 
-        if (result.success) {
-            router.push('/dashboard');
+        console.log("Sign in response:", data, error);
+
+        if (error) {
+            setError(error.message || "An error occurred during login.");
+            setIsSubmitting(false);
+            return;
         } else {
-            setError(result.error || "Login failed. Please check your credentials.");
+            if (data?.user) {
+                router.push('/dashboard');
+            } else {
+                setError("Login failed. Please check your credentials.");
+            }
         }
+
         setIsSubmitting(false);
     };
 
@@ -57,7 +69,7 @@ export function SignInForm() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            disabled={isSubmitting || authLoading}
+                            disabled={isSubmitting}
                         />
                     </div>
                     <div className="grid gap-2">
@@ -68,16 +80,17 @@ export function SignInForm() {
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            disabled={isSubmitting || authLoading}
+                            disabled={isSubmitting}
                         />
                     </div>
                     {error && <p className="text-sm text-red-600">{error}</p>}
                 </CardContent>
                 <CardFooter className="flex flex-col mt-5">
-                    <Button type="submit" className="w-full" disabled={isSubmitting || authLoading}>
-                        {isSubmitting || authLoading ? "Signing in..." : "Sign in"}
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? "Signing in..." : "Sign in"}
                     </Button>
-                    <Button variant="link" type="button" onClick={() => router.push('/signup')} disabled={isSubmitting || authLoading} className="text-sm">
+                    <Button variant="link" type="button" onClick={() => router.push('/signup')} disabled={isSubmitting}
+                            className="text-sm">
                         Don't have an account yet? Click here to register.
                     </Button>
                 </CardFooter>

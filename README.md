@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PivotHire AI
 
-## Getting Started
+### A revolutionary AI-driven freelancing platform for hiring match.
 
-First, run the development server:
+Visit [our website](https://www.pivothire.tech/) and get started today!
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What can you get?
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Businesses:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Intelligent Hiring, Superior Results:** Publish your project requirements and let our AI-driven core algorithms analyze your needs, ensuring a perfect match with top-tier talent.
+- **Focus on Outcomes, Not Operations:** We eliminate the back-and-forth of traditional hiring. Our intelligent agent manages communication, allowing you to focus on your business goals while we handle the recruitment process.
+- **Guaranteed Confidentiality:** Protect your intellectual property with legally binding agreements signed through our secure platform. All talent is vetted to ensure your sensitive information remains safe.
+- **Hire with Confidence:** We conduct thorough legal authorizations and background checks on all corporations and rigorously test the skills of our freelancers, building a foundation of trust and quality.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Freelancers:
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Showcase Your Skills, Get Noticed:** Register and let our comprehensive skill recognition system validate your expertise, making your profile stand out to top companies.
+- **The Right Jobs, Delivered to You:** Stop searching and start working. Our AI matches your skills to ideal projects, assigning you to roles where you can excel.
+- **Streamlined Communication, Maximized Efficiency:** Clarify project requirements directly with our intelligent agent, not the client. This reduces friction, increases your productivity, and lets you focus on what you do best.
+- **Secure and Timely Payments:** Fulfill your project requirements with the assurance that your legal rights and payments are protected through our trusted platform.

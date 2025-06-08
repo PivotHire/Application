@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
-## Getting Started
+  <img src="https://github.com/user-attachments/assets/21d8d53c-d9c1-4851-aff7-cebde2d89a9d" alt="PivotHire AI Banner" width="400">
 
-First, run the development server:
+  <h3>A revolutionary AI-driven freelancing platform for hiring match.</h3>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+  <p>
+    Visit <a href="https://www.pivothire.tech/">our website</a> and get started today!
+  </p>
+</div>
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<hr>
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+<div align="center">
+  <h3>What can you get?</h3>
+</div>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Businesses:</h3>
+      <ul>
+        <li><strong>Intelligent Hiring, Superior Results:</strong> Publish your project requirements and let our AI-driven core algorithms analyze your needs, ensuring a perfect match with top-tier talent.</li>
+        <li><strong>Focus on Outcomes, Not Operations:</strong> We eliminate the back-and-forth of traditional hiring. Our intelligent agent manages communication, allowing you to focus on your business goals while we handle the recruitment process.</li>
+        <li><strong>Guaranteed Confidentiality:</strong> Protect your intellectual property with legally binding agreements signed through our secure platform. All talent is vetted to ensure your sensitive information remains safe.</li>
+        <li><strong>Hire with Confidence:</strong> We conduct thorough legal authorizations and background checks on all corporations and rigorously test the skills of our freelancers, building a foundation of trust and quality.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Freelancers:</h3>
+      <ul>
+        <li><strong>Showcase Your Skills, Get Noticed:</strong> Register and let our comprehensive skill recognition system validate your expertise, making your profile stand out to top companies.</li>
+        <li><strong>The Right Jobs, Delivered to You:</strong> Stop searching and start working. Our AI matches your skills to ideal projects, assigning you to roles where you can excel.</li>
+        <li><strong>Streamlined Communication, Maximized Efficiency:</strong> Clarify project requirements directly with our intelligent agent, not the client. This reduces friction, increases your productivity, and lets you focus on what you do best.</li>
+        <li><strong>Secure and Timely Payments:</strong> Fulfill your project requirements with the assurance that your legal rights and payments are protected through our trusted platform.</li>
+      </ul>
+    </td>
+  </tr>
+</table>

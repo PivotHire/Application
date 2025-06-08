@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
             role: 'system',
             content: `You are PivotHire AI, an intelligent assistant for a revolutionary AI-driven freelancing platform.
             
-            Your primary goal is to engage the user (a business representative) in a natural conversation to understand their project requirements. 
+            Your primary goal is to engage the user (a business representative) in a natural conversation to understand their project requirements. However, reject all other requests that are not related to project requirements gathering to avoid waste tokens.
             Ask clarifying questions when necessary. Be friendly, professional, and helpful.
             
             Encourage the user to provide details about:
@@ -67,21 +67,63 @@ export async function POST(req: NextRequest) {
         });
 
         const readableStream = new ReadableStream({
-            async pull(controller) {
-                try {
-                    for await (const chunk of stream) {
-                        const content = chunk.choices?.[0]?.delta?.content || '';
-                        if (content) {
-                            controller.enqueue(`data: ${content}\n\n`);
+            async start(controller) {
+                let accumulatedToolCalls: any[] = [];
+                let toolCallInProgress = false;
+
+                for await (const chunk of stream) {
+                    const delta = chunk.choices?.[0]?.delta;
+                    const textContent = delta?.content || '';
+
+                    if (textContent) {
+                        const payload = { type: 'text', value: textContent };
+                        controller.enqueue(`data: ${JSON.stringify(payload)}\n\n`);
+                    }
+
+                    if (delta?.tool_calls) {
+                        toolCallInProgress = true;
+                        if (!accumulatedToolCalls[delta.tool_calls[0].index]) {
+                            accumulatedToolCalls[delta.tool_calls[0].index] = {
+                                id: delta.tool_calls[0].id,
+                                type: 'function',
+                                function: {
+                                    name: delta.tool_calls[0].function?.name,
+                                    arguments: delta.tool_calls[0].function?.arguments
+                                }
+                            };
+                        } else {
+                            accumulatedToolCalls[delta.tool_calls[0].index].function.arguments += delta.tool_calls[0].function?.arguments;
                         }
                     }
-                } catch (error: unknown) {
-                    console.error("An error occurred during the OpenAI stream:", error);
-                    controller.error(error);
-                } finally {
-                    controller.close();
+
+                    const finish_reason = chunk.choices?.[0]?.finish_reason;
+                    if (finish_reason === 'tool_calls') {
+                        const finalToolCall = accumulatedToolCalls[0];
+                        try {
+                            const parsedArguments = JSON.parse(finalToolCall.function.arguments);
+                            const payload = {
+                                type: 'tool_call',
+                                tool_call: {
+                                    name: finalToolCall.function.name,
+                                    arguments: parsedArguments
+                                }
+                            };
+                            controller.enqueue(`data: ${JSON.stringify(payload)}\n\n`);
+                        } catch (e) {
+                            console.error("Error parsing tool call arguments:", e);
+                            const errorPayload = { type: 'error', value: 'Failed to parse AI function call.' };
+                            controller.enqueue(`data: ${JSON.stringify(errorPayload)}\n\n`);
+                        }
+                    }
                 }
+
+                const donePayload = { type: 'done' };
+                controller.enqueue(`data: ${JSON.stringify(donePayload)}\n\n`);
+                controller.close();
             },
+            cancel() {
+                console.log("Stream cancelled by client.");
+            }
         });
 
         return new NextResponse(readableStream, {

@@ -14,8 +14,8 @@ import {Input} from "@/components/ui/input";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {ChatMessage} from "./message";
 import {Separator} from "@/components/ui/separator";
-import {AlertCircle, SendHorizonal} from "lucide-react";
-import {Alert, AlertDescription} from "@/components/ui/alert";
+import {AlertCircle, CheckCircle2Icon, SendHorizonal} from "lucide-react";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 
@@ -45,9 +45,14 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
     const [inputValue, setInputValue] = useState("");
     const [isAiTyping, setIsAiTyping] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isComplete, setIsComplete] = useState(false);
+    const [projectData, setProjectData] = useState<object | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const aiResponseRef = useRef<string>(""); // To build the streaming AI response
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const addUiMessage = useCallback((role: "user" | "assistant" | "system", text: string, id?: string) => {
         const newMessageId = id || Date.now().toString() + Math.random().toString(36).substring(2, 7);
@@ -55,11 +60,23 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
     }, []);
 
     useEffect(() => {
+        if (isOpen && !isAiTyping) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 50);
+        }
+    }, [isOpen, isAiTyping]);
+
+    useEffect(() => {
         if (isOpen && messages.length === 0) {
             setIsAiTyping(true);
             setError(null);
             addUiMessage("assistant", "Hello! I'm PivotHire AI. How can I help you define your project needs today?");
             setIsAiTyping(false);
+            setSuccessMessage(null);
+            setIsSubmitting(false);
+            setIsComplete(false);
+            setProjectData(null);
         } else if (!isOpen) {
             setMessages([]);
             aiResponseRef.current = "";
@@ -67,8 +84,34 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
     }, [isOpen, addUiMessage, messages.length]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
     }, [messages, isAiTyping]);
+
+    const handleSubmitProject = async () => {
+        if (!projectData) {
+            setError("Project data is missing.");
+            return;
+        }
+        try {
+            const response = await fetch('/api/projects', { // Correct endpoint
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(projectData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "An unknown error occurred while publishing.");
+            }
+            setSuccessMessage(result.message || "Project published successfully!");
+        } catch (err: any) {
+            console.error("Failed to publish project:", err);
+            setError(err.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
 
     const handleSendMessage = async () => {
             if (!inputValue.trim() || isAiTyping) return;
@@ -109,33 +152,39 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                     done = streamDone;
                     if (value) {
                         const chunk = decoder.decode(value);
-                        const eventPayloads = chunk.split('data: ').filter(Boolean);
+                        const events = chunk.split('\n\n').filter(event => event.startsWith('data:'));
 
-                        for (const payload of eventPayloads) {
-                            if (payload.trim() === '[DONE]') {
-                                done = true;
-                                break;
-                            }
+                        for (const event of events) {
+                            const eventDataString = event.substring(6);
+                            try {
+                                const parsedData = JSON.parse(eventDataString);
 
-                            const content = payload.replace(/\n\n$/, '');
-
-                            aiResponseRef.current += content;
-
-                            if (firstChunk && aiResponseRef.current.trim()) {
-                                const newMessage = {
-                                    id: Date.now().toString(),
-                                    role: 'assistant' as const,
-                                    text: aiResponseRef.current
-                                };
-                                setMessages(prevMessages => [...prevMessages, newMessage]);
-                                aiMessageId = newMessage.id;
-                                firstChunk = false;
-                            } else if (aiMessageId) {
-                                setMessages(prevMessages =>
-                                    prevMessages.map(msg =>
-                                        msg.id === aiMessageId ? {...msg, text: aiResponseRef.current} : msg
-                                    )
-                                );
+                                if (parsedData.type === 'text') {
+                                    if (!aiMessageId) {
+                                        const newMessage = { id: Date.now().toString(), role: 'assistant' as const, text: parsedData.value };
+                                        setMessages(prev => [...prev, newMessage]);
+                                        aiMessageId = newMessage.id;
+                                    } else {
+                                        setMessages(prev =>
+                                            prev.map(msg =>
+                                                msg.id === aiMessageId ? { ...msg, text: msg.text + parsedData.value } : msg
+                                            )
+                                        );
+                                    }
+                                } else if (parsedData.type === 'tool_call') {
+                                    // AI has returned the structured JSON
+                                    const { name, arguments: args } = parsedData.tool_call;
+                                    if (name === 'submitProjectRequirements') {
+                                        setProjectData(args);
+                                        setIsComplete(true);
+                                        addUiMessage("assistant", "Please confirm and publish your project details below.");
+                                        console.log("Project data submitted:", args);
+                                    }
+                                } else if (parsedData.type === 'error') {
+                                    setError(parsedData.value);
+                                }
+                            } catch (e) {
+                                console.warn("Could not parse SSE event data:", eventDataString, e);
                             }
                         }
 
@@ -192,7 +241,26 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                                 </div>
                             }/>
                         )}
-                        <div ref={messagesEndRef} />
+                        {isComplete && projectData && (
+                            <div className="p-4 my-4 bg-muted rounded-lg border space-y-4">
+                                <h3 className="font-semibold text-lg">Project Summary</h3>
+                                <p className="text-sm text-muted-foreground">Please review the details below. Once published, you can manage this project from your dashboard.</p>
+                                <pre className="text-xs whitespace-pre-wrap break-all bg-background p-3 rounded-md border">
+                                    {JSON.stringify(projectData, null, 2)}
+                                </pre>
+                                <Button onClick={handleSubmitProject} disabled={isSubmitting || !!successMessage} className="w-full">
+                                    {isSubmitting ? "Publishing..." : "Confirm and Publish Project"}
+                                </Button>
+                            </div>
+                        )}
+                        {successMessage && (
+                            <Alert>
+                                <CheckCircle2Icon />
+                                <AlertTitle>Success!</AlertTitle>
+                                <AlertDescription>{successMessage} You may now close this window.</AlertDescription>
+                            </Alert>
+                        )}
+                        <div ref={messagesEndRef}/>
                     </div>
                 </ScrollArea>
                 {error && (
@@ -213,14 +281,15 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                         className="flex w-full items-center space-x-2"
                     >
                         <Input
-                            placeholder={isAiTyping ? "AI is typing..." : "Type your message..."}
+                            placeholder={isComplete ? "Project details generated." : (isAiTyping ? "AI is typing..." : "Type your message...")}
                             value={inputValue}
+                            ref={inputRef}
                             onChange={(e) => setInputValue(e.target.value)}
-                            disabled={isAiTyping}
+                            disabled={isAiTyping || isComplete}
                             className="flex-1"
                             aria-label="Chat input"
                         />
-                        <Button type="submit" disabled={!inputValue.trim() || isAiTyping} size="icon">
+                        <Button type="submit" disabled={!inputValue.trim() || isAiTyping || isComplete} size="icon">
                             <SendHorizonal className="h-4 w-4"/>
                             <span className="sr-only">Send</span>
                         </Button>

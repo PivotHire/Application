@@ -8,6 +8,9 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {useRouter} from "next/navigation";
 import Image from "next/image";
 import {authClient} from "@/lib/auth-client";
+import {Project} from "@/lib/types";
+import {Skeleton} from "@/components/ui/skeleton";
+import {ProjectCard} from "@/components/projectCard";
 
 const {data: session} = await authClient.getSession();
 
@@ -19,7 +22,32 @@ export default function DashboardComponent() {
     const isLoading = session === undefined;
     const [loadingMsg, setLoadingMsg] = useState("Loading dashboard...");
 
-    console.log(session);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [projectsLoading, setProjectsLoading] = useState(true);
+    const [projectsError, setProjectsError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            setProjectsLoading(true);
+            setProjectsError(null);
+            try {
+                const response = await fetch('/api/projects');
+                if (!response.ok) {
+                    throw new Error("Failed to fetch projects.");
+                }
+                const data = await response.json();
+                setProjects(data);
+            } catch (error: any) {
+                setProjectsError(error.message);
+            } finally {
+                setProjectsLoading(false);
+            }
+        };
+
+        if (isAuthenticated) {
+            fetchProjects();
+        }
+    }, [isAuthenticated]);
 
     useEffect(() => {
         if (isLoading) {
@@ -49,6 +77,41 @@ export default function DashboardComponent() {
             <div className="flex h-screen items-center justify-center"><p>{loadingMsg}</p></div>
         )
     }
+
+    const renderProjectList = () => {
+        if (projectsLoading) {
+            // Show skeleton loaders while fetching data
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="flex flex-col space-y-3">
+                            <Skeleton className="h-[125px] w-full rounded-xl" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-[250px]" />
+                                <Skeleton className="h-4 w-[200px]" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        if (projectsError) {
+            return <p className="text-destructive">Error: {projectsError}</p>;
+        }
+
+        if (projects.length === 0) {
+            return <p className="text-center text-muted-foreground">You haven't published any projects yet. Click "Publish New Task" to get started!</p>;
+        }
+
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map(project => (
+                    <ProjectCard key={project.id} project={project} />
+                ))}
+            </div>
+        );
+    };
 
     return (
         <div className="container mx-auto p-2 md:p-4">
@@ -91,6 +154,11 @@ export default function DashboardComponent() {
                     </Button>
                 </CardContent>
             </Card>
+
+            <div className="space-y-3 mt-6">
+                <h2 className="text-2xl font-bold">Your Projects</h2>
+                {renderProjectList()}
+            </div>
 
             <ChatbotDialog
                 isOpen={isChatbotOpen}

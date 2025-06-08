@@ -1,3 +1,6 @@
+
+![og-image-light(1200x630)](https://github.com/user-attachments/assets/21d8d53c-d9c1-4851-aff7-cebde2d89a9d)
+
 # PivotHire AI
 
 ### A revolutionary AI-driven freelancing platform for hiring match.

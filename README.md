@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="https://github.com/user-attachments/assets/21d8d53c-d9c1-4851-aff7-cebde2d89a9d" alt="PivotHire AI Banner" width="800">
+  <img src="https://github.com/user-attachments/assets/21d8d53c-d9c1-4851-aff7-cebde2d89a9d" alt="PivotHire AI Banner" width="400">
 
   <h3>A revolutionary AI-driven freelancing platform for hiring match.</h3>
 

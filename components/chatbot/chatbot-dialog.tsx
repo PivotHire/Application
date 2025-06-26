@@ -14,10 +14,11 @@ import {Input} from "@/components/ui/input";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {ChatMessage} from "./message";
 import {Separator} from "@/components/ui/separator";
-import {AlertCircle, CheckCircle2Icon, SendHorizonal} from "lucide-react";
+import {AlertCircle, CheckCircle2, SendHorizonal} from "lucide-react";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
+import styles from "../../app/styles/chatbot.module.scss";
 
 interface ChatbotDialogProps {
     isOpen: boolean;
@@ -51,7 +52,7 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const aiResponseRef = useRef<string>(""); // To build the streaming AI response
+    const aiResponseRef = useRef<string>("");
     const inputRef = useRef<HTMLInputElement>(null);
 
     const addUiMessage = useCallback((role: "user" | "assistant" | "system", text: string, id?: string) => {
@@ -93,7 +94,7 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
             return;
         }
         try {
-            const response = await fetch('/api/projects', { // Correct endpoint
+            const response = await fetch('/api/projects', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(projectData)
@@ -172,7 +173,6 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                                         );
                                     }
                                 } else if (parsedData.type === 'tool_call') {
-                                    // AI has returned the structured JSON
                                     const { name, arguments: args } = parsedData.tool_call;
                                     if (name === 'submitProjectRequirements') {
                                         setProjectData(args);
@@ -207,55 +207,46 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl flex flex-col h-[80vh] sm:h-[calc(100vh-8rem)]">
-                <DialogHeader className="flex-shrink-0">
+            <DialogContent className={styles.dialogContent}>
+                <DialogHeader className={styles.header}>
                     <DialogTitle>PivotHire AI Assistant</DialogTitle>
                     <DialogDescription>
                         Describe your project needs, and I'll help you get started.
                     </DialogDescription>
                 </DialogHeader>
-                <Separator className="flex-shrink-0"/>
-                <ScrollArea
-                    className="flex-grow basis-0 min-h-0"
-                >
-                    <div className="p-4 space-y-4">
-                        {messages.map((msg) => {
-                            // console.log("Raw msg.text for Markdown:", JSON.stringify(msg.text))
-                            return (< ChatMessage
+                <Separator className={styles.separator}/>
+                <ScrollArea className={styles.scrollArea}>
+                    <div className={styles.messageListContainer}>
+                        {messages.map((msg) => (
+                            <ChatMessage
                                 key={msg.id}
                                 sender={msg.role === 'assistant' ? 'ai' : msg.role}
-                                text={
-                                    <ReactMarkdown remarkPlugins={[remarkBreaks]}>{msg.text}</ReactMarkdown>
-                                }
+                                text={<ReactMarkdown remarkPlugins={[remarkBreaks]}>{msg.text}</ReactMarkdown>}
                                 avatarSrc={avatarSrc}
-                            />)
-                        })}
+                            />
+                        ))}
                         {isAiTyping && (
                             <ChatMessage key="typing" sender="ai" text={
-                                <div className="flex items-center space-x-1">
-                                    <span
-                                        className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.3s]"></span>
-                                    <span
-                                        className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.15s]"></span>
-                                    <span className="h-2 w-2 bg-primary rounded-full animate-pulse"></span>
+                                <div className={styles.typingIndicator}>
+                                    <span className={styles.dot} style={{ animationDelay: '-0.3s' }}></span>
+                                    <span className={styles.dot} style={{ animationDelay: '-0.15s' }}></span>
+                                    <span className={styles.dot}></span>
                                 </div>
                             }/>
                         )}
                         {isComplete && projectData && (
-                            <div className="p-4 my-4 bg-muted rounded-lg border space-y-4">
-                                <h3 className="font-semibold text-lg">Project Summary</h3>
-                                <p className="text-sm text-muted-foreground">Please review the details below. Once published, you can manage this project from your dashboard.</p>
-                                <pre className="text-xs whitespace-pre-wrap break-all bg-background p-3 rounded-md border">
-                                    {JSON.stringify(projectData, null, 2)}
-                                </pre>
-                                <Button onClick={handleSubmitProject} disabled={isSubmitting || !!successMessage} className="w-full">
+                            <div className={styles.summaryCard}>
+                                <h3>Project Summary</h3>
+                                <p>Please review the details below. Once published, you can manage this project from your dashboard.</p>
+                                <pre>{JSON.stringify(projectData, null, 2)}</pre>
+                                <Button onClick={handleSubmitProject} disabled={isSubmitting || !!successMessage}>
                                     {isSubmitting ? "Publishing..." : "Confirm and Publish Project"}
                                 </Button>
                             </div>
                         )}
                         {successMessage && (
                             <Alert>
-                                <CheckCircle2Icon />
+                                <CheckCircle2 />
                                 <AlertTitle>Success!</AlertTitle>
                                 <AlertDescription>{successMessage} You may now close this window.</AlertDescription>
                             </Alert>
@@ -264,34 +255,28 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                     </div>
                 </ScrollArea>
                 {error && (
-                    <div className="px-6 pt-2 flex-shrink-0">
-                        <Alert variant="destructive" className="my-2">
-                            <AlertCircle className="h-4 w-4"/>
+                    <div className={styles.errorContainer}>
+                        <Alert variant="destructive" className={styles.alert}>
+                            <AlertCircle/>
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     </div>
                 )}
-                <Separator className="flex-shrink-0"/>
-                <DialogFooter className="pt-4 flex-shrink-0">
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSendMessage();
-                        }}
-                        className="flex w-full items-center space-x-2"
-                    >
+                <Separator className={styles.separator}/>
+                <DialogFooter className={styles.footer}>
+                    <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className={styles.form}>
                         <Input
                             placeholder={isComplete ? "Project details generated." : (isAiTyping ? "AI is typing..." : "Type your message...")}
                             value={inputValue}
                             ref={inputRef}
                             onChange={(e) => setInputValue(e.target.value)}
                             disabled={isAiTyping || isComplete}
-                            className="flex-1"
+                            className={styles.input}
                             aria-label="Chat input"
                         />
-                        <Button type="submit" disabled={!inputValue.trim() || isAiTyping || isComplete} size="icon">
-                            <SendHorizonal className="h-4 w-4"/>
-                            <span className="sr-only">Send</span>
+                        <Button type="submit" disabled={!inputValue.trim() || isAiTyping || isComplete} className={styles.sendButton}>
+                            <SendHorizonal/>
+                            <span className={styles.srOnly}>Send</span>
                         </Button>
                     </form>
                 </DialogFooter>

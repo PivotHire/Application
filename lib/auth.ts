@@ -12,10 +12,11 @@ export const auth = betterAuth({
         enabled: true
     },
     session: {
-        expiresIn: 60 * 60 * 24 * 3, // 3 days
-        updateAge: 60 * 60 * 24 // 1 day (every 1 day the session expiration is updated)
+        expiresIn: 60 * 60 * 24 * 3,
+        updateAge: 60 * 60 * 24
     },
-    baseURL: "https://demo.pivothire.tech",
+    // baseURL: "https://demo.pivothire.tech",
+    baseURL: "http://localhost:3000",
     basePath: "/api/auth",
     // socialProviders: {
     //     github: {

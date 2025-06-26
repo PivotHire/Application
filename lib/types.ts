@@ -18,7 +18,6 @@ export interface users {
     password_hash: string
     created_at: ColumnType<Date, string | undefined, never>
     username: string
-    nick_name: string | null
     avatar_url: string | null
     type: boolean // true = corporation, false = individual
 }

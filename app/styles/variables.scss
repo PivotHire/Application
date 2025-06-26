@@ -1,0 +1,21 @@
+$breakpoint-lg: 1024px;
+$breakpoint-md: 768px;
+$breakpoint-sm: 640px;
+
+$black-main: #252525;
+$text-white: #ffffff;
+
+$container-max-width: 1280px;
+
+$sidebar-width: 16rem;
+$sidebar-bg: hsl(var(--card));
+$sidebar-border-color: hsl(var(--border));
+$text-color: hsl(var(--muted-foreground));
+$text-color-hover: hsl(var(--foreground));
+$active-bg: hsl(var(--accent));
+$active-text-color: hsl(var(--accent-foreground));
+
+$sidebar-accent: var(--sidebar-accent);
+$sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+$sidebar-border: hsl(var(--sidebar-border));
+$sidebar-ring: var(--sidebar-ring-color, $sidebar-accent);

@@ -1,0 +1,84 @@
+
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.header {
+    .headerTop {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .title {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.content {
+    flex-grow: 1;
+}
+
+.description {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 1rem;
+
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.metadataSeparator {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.metadataContainer {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+
+    & > * + * {
+        margin-top: 0.75rem;
+    }
+}
+
+.metadataRow {
+    display: flex;
+    align-items: center;
+
+    .icon {
+        height: 1rem;
+        width: 1rem;
+        margin-right: 0.5rem;
+        color: hsl(var(--muted-foreground));
+        flex-shrink: 0;
+    }
+
+    .label {
+        font-weight: 600;
+        margin-right: 0.25rem;
+    }
+
+    .value {
+        color: hsl(var(--muted-foreground));
+    }
+}
+
+.footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}

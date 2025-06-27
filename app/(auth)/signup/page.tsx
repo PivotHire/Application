@@ -12,7 +12,7 @@ export default function SignUpPage() {
             <div className={styles.brandingPanel}>
                 <div className={styles.logoContainer}>
                     <Image
-                        src="/logo-dark-transparent.png"
+                        src="/logo-dark-transparent.svg"
                         alt="PivotHire AI Logo"
                         width={1280}
                         height={320}

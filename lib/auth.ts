@@ -15,8 +15,7 @@ export const auth = betterAuth({
         expiresIn: 60 * 60 * 24 * 3,
         updateAge: 60 * 60 * 24
     },
-    // baseURL: "https://demo.pivothire.tech",
-    baseURL: "http://localhost:3000",
+    // baseURL: "http://localhost:3000",
     basePath: "/api/auth",
     // socialProviders: {
     //     github: {

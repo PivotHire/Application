@@ -1,15 +1,26 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import { Montserrat } from 'next/font/google';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+import { Montserrat, Geist, Geist_Mono } from 'next/font/google';
 
 const montserrat = Montserrat({
     subsets: ['latin'],
     variable: '--font-montserrat',
     display: 'swap',
 });
+
+const geist = Geist({
+    subsets: ['latin'],
+    variable: '--font-geist-sans',
+    display: 'swap',
+});
+
+const geistMono = Geist_Mono({
+    subsets: ['latin'],
+    variable: '--font-geist-mono',
+    display: 'swap',
+});
+
 
 export const metadata: Metadata = {
     title: {
@@ -60,9 +71,9 @@ export default function RootLayout({
         <html
             lang="en"
             suppressHydrationWarning
-            className={`${montserrat.variable} ${GeistSans.variable} ${GeistMono.variable}`}
+            className={`${montserrat.variable} ${geist.variable} ${geistMono.variable}`}
         >
-        <body>
+        <body className="antialiased md:subpixel-antialiased">
         {children}
         </body>
         </html>

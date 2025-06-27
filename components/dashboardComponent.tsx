@@ -54,7 +54,7 @@ export default function DashboardComponent() {
                 router.push('/signin');
             }
         }
-    }, [session]);
+    }, [isLoading]);
 
     const renderProjectList = () => {
         if (projectsLoading) {

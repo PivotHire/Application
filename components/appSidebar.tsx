@@ -45,16 +45,10 @@ const {data: session} = await authClient.getSession();
 
 export default function AppSidebar(props: SidebarProps) {
 
-    const [isLoading, setIsLoading] = useState(true);
+    const isLoading = session === undefined;
     const router = useRouter();
 
     const {toggleSidebar} = useSidebar();
-
-    useEffect(() => {
-        if (session) {
-            setIsLoading(false);
-        }
-    }, [session]);
 
     const handleLogout = () => {
         authClient.signOut().then(() => {

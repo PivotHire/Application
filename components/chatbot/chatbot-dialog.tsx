@@ -19,11 +19,13 @@ import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import styles from "../../app/styles/chatbot.module.scss";
+import type { Project } from "@/lib/types";
 
 interface ChatbotDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     avatarSrc?: string;
+    projectForTalentSearch?: Project | null;
 }
 
 type Message = {
@@ -41,19 +43,21 @@ const mapToApiMessages = (uiMessages: Message[]) => {
         }));
 };
 
-export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogProps) {
+export function ChatbotDialog({isOpen, onOpenChange, avatarSrc, projectForTalentSearch}: ChatbotDialogProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState("");
-    const [isAiTyping, setIsAiTyping] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isComplete, setIsComplete] = useState(false);
+
+    const [isCreateModeComplete, setIsCreateModeComplete] = useState(false);
     const [projectData, setProjectData] = useState<object | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const aiResponseRef = useRef<string>("");
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const mode = projectForTalentSearch ? "findTalent" : "createProject";
 
     const addUiMessage = useCallback((role: "user" | "assistant" | "system", text: string, id?: string) => {
         const newMessageId = id || Date.now().toString() + Math.random().toString(36).substring(2, 7);
@@ -61,38 +65,67 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
     }, []);
 
     useEffect(() => {
-        if (isOpen && !isAiTyping) {
-            setTimeout(() => {
-                inputRef.current?.focus();
-            }, 50);
-        }
-    }, [isOpen, isAiTyping]);
-
-    useEffect(() => {
-        if (isOpen && messages.length === 0) {
-            setIsAiTyping(true);
+        if (isOpen) {
+            setIsLoading(false);
             setError(null);
-            addUiMessage("assistant", "Hello! I'm PivotHire AI. How can I help you define your project needs today?");
-            setIsAiTyping(false);
             setSuccessMessage(null);
-            setIsSubmitting(false);
-            setIsComplete(false);
-            setProjectData(null);
-        } else if (!isOpen) {
             setMessages([]);
-            aiResponseRef.current = "";
+
+            if (mode === 'findTalent' && projectForTalentSearch) {
+                addUiMessage("assistant", `Looking for talent for your project: **${projectForTalentSearch.project_name}**...`);
+                runTalentSearch(projectForTalentSearch, []);
+            } else {
+                addUiMessage("assistant", "Hello! I'm PivotHire AI. How can I help you define your project needs today?");
+                setIsCreateModeComplete(false);
+                setProjectData(null);
+                setIsSubmitting(false);
+            }
         }
-    }, [isOpen, addUiMessage, messages.length]);
+    }, [isOpen, projectForTalentSearch, mode]);
+
+    useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isLoading]);
+    useEffect(() => { if (isOpen && !isLoading) { setTimeout(() => inputRef.current?.focus(), 100); } }, [isOpen, isLoading]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
-    }, [messages, isAiTyping]);
+        if (isCreateModeComplete) {
+            setTimeout(
+                () => {window.location.reload();},
+                2000,
+            );
+        }
+    }, [isCreateModeComplete]);
+
+    const runTalentSearch = async (project: Project, conversationHistory: Message[]) => {
+        setIsLoading(true);
+        setError(null);
+
+        const apiMessages = mapToApiMessages(conversationHistory);
+
+        try {
+            const response = await fetch('/api/chat/talents/find', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project, messages: apiMessages }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Failed to find talents.");
+
+            addUiMessage("assistant", data.reply || "I've analyzed the results.");
+
+        } catch (err: any) {
+            setError(err.message);
+            addUiMessage("system", `Error: ${err.message}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSubmitProject = async () => {
         if (!projectData) {
             setError("Project data is missing.");
             return;
         }
+        setIsSubmitting(true);
         try {
             const response = await fetch('/api/projects', {
                 method: 'POST',
@@ -106,6 +139,7 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                 throw new Error(result.error || "An unknown error occurred while publishing.");
             }
             setSuccessMessage(result.message || "Project published successfully!");
+            setIsCreateModeComplete(true);
         } catch (err: any) {
             console.error("Failed to publish project:", err);
             setError(err.message);
@@ -115,20 +149,26 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
     }
 
     const handleSendMessage = async () => {
-            if (!inputValue.trim() || isAiTyping) return;
+        if (!inputValue.trim() || isLoading || isCreateModeComplete) return;
 
-            const userMessageText = inputValue.trim();
-            addUiMessage("user", userMessageText);
-            setInputValue("");
-            setIsAiTyping(true);
+        const userMessageText = inputValue.trim();
+        addUiMessage("user", userMessageText);
+        setInputValue("");
+
+        const currentConversation = [...messages, { id: 'temp-user', role: 'user' as const, text: userMessageText }];
+        const apiMessagesPayload = mapToApiMessages(currentConversation);
+
+        if (mode === 'findTalent' && projectForTalentSearch) {
+            console.log(projectForTalentSearch);
+            await runTalentSearch(projectForTalentSearch, currentConversation);
+        } else {
+            setIsLoading(true);
             setError(null);
-            aiResponseRef.current = "";
-
-            const currentConversation = [...messages, {id: 'temp-user', role: 'user' as const, text: userMessageText}];
-            const apiMessagesPayload = mapToApiMessages(currentConversation);
+            let accumulatedResponse = "";
+            let aiMessageId: string | undefined;
 
             try {
-                const response = await fetch('/api/chat', {
+                const response = await fetch('/api/chat/projects/create', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({messages: apiMessagesPayload}),
@@ -176,7 +216,7 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                                     const { name, arguments: args } = parsedData.tool_call;
                                     if (name === 'submitProjectRequirements') {
                                         setProjectData(args);
-                                        setIsComplete(true);
+                                        setIsLoading(false);
                                         addUiMessage("assistant", "Please confirm and publish your project details below.");
                                         console.log("Project data submitted:", args);
                                     }
@@ -189,21 +229,19 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                         }
 
                         if (done) {
-                            setIsAiTyping(false);
+                            setIsLoading(false);
                         }
                     }
                 }
-            } catch
-                (err: any) {
+            } catch (err: any) {
                 console.error("Failed to send message or get AI reply:", err);
                 setError(err.message || "Failed to connect to the AI assistant. Please try again.");
                 addUiMessage("system", `Error: ${err.message || "Could not connect to the AI."}`);
-                setIsAiTyping(false);
-            } finally {
-                setIsAiTyping(false);
+                setIsLoading(false);
             }
+            finally { setIsLoading(false); }
         }
-    ;
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -225,58 +263,47 @@ export function ChatbotDialog({isOpen, onOpenChange, avatarSrc}: ChatbotDialogPr
                                 avatarSrc={avatarSrc}
                             />
                         ))}
-                        {isAiTyping && (
-                            <ChatMessage key="typing" sender="ai" text={
-                                <div className={styles.typingIndicator}>
-                                    <span className={styles.dot} style={{ animationDelay: '-0.3s' }}></span>
-                                    <span className={styles.dot} style={{ animationDelay: '-0.15s' }}></span>
-                                    <span className={styles.dot}></span>
-                                </div>
-                            }/>
-                        )}
-                        {isComplete && projectData && (
+                        {projectData && (
                             <div className={styles.summaryCard}>
                                 <h3>Project Summary</h3>
-                                <p>Please review the details below. Once published, you can manage this project from your dashboard.</p>
+                                <p>Please review the details below and click the publish button.</p>
                                 <pre>{JSON.stringify(projectData, null, 2)}</pre>
                                 <Button onClick={handleSubmitProject} disabled={isSubmitting || !!successMessage}>
                                     {isSubmitting ? "Publishing..." : "Confirm and Publish Project"}
                                 </Button>
                             </div>
                         )}
-                        {successMessage && (
-                            <Alert>
-                                <CheckCircle2 />
-                                <AlertTitle>Success!</AlertTitle>
-                                <AlertDescription>{successMessage} You may now close this window.</AlertDescription>
-                            </Alert>
-                        )}
                         <div ref={messagesEndRef}/>
                     </div>
                 </ScrollArea>
+                <div className={styles.msgContainer}>
+                {isCreateModeComplete && successMessage && (
+                        <Alert>
+                            <CheckCircle2 />
+                            <AlertTitle>Success!</AlertTitle>
+                            <AlertDescription>{successMessage} The page will be refreshed.</AlertDescription>
+                        </Alert>
+                )}
                 {error && (
-                    <div className={styles.errorContainer}>
                         <Alert variant="destructive" className={styles.alert}>
                             <AlertCircle/>
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
-                    </div>
                 )}
+                </div>
                 <Separator className={styles.separator}/>
                 <DialogFooter className={styles.footer}>
                     <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className={styles.form}>
                         <Input
-                            placeholder={isComplete ? "Project details generated." : (isAiTyping ? "AI is typing..." : "Type your message...")}
+                            placeholder={isCreateModeComplete ? "Review and publish project above." : (isLoading ? "AI is thinking..." : "Type your message...")}
                             value={inputValue}
                             ref={inputRef}
                             onChange={(e) => setInputValue(e.target.value)}
-                            disabled={isAiTyping || isComplete}
+                            disabled={isLoading || isCreateModeComplete}
                             className={styles.input}
-                            aria-label="Chat input"
                         />
-                        <Button type="submit" disabled={!inputValue.trim() || isAiTyping || isComplete} className={styles.sendButton}>
+                        <Button type="submit" disabled={!inputValue.trim() || isLoading || isCreateModeComplete} className={styles.sendButton}>
                             <SendHorizonal/>
-                            <span className={styles.srOnly}>Send</span>
                         </Button>
                     </form>
                 </DialogFooter>

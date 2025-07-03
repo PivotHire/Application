@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {Button} from "@/components/ui/button";
 import {ChatbotDialog} from "@/components/chatbot/chatbot-dialog";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
@@ -24,6 +24,8 @@ export default function DashboardComponent() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [projectsLoading, setProjectsLoading] = useState(true);
     const [projectsError, setProjectsError] = useState<string | null>(null);
+
+    const [projectForSearch, setProjectForSearch] = useState<Project | null>(null);
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -56,6 +58,18 @@ export default function DashboardComponent() {
         }
     }, [isLoading]);
 
+    const handleFindTalent = useCallback((project: Project) => {
+        setProjectForSearch(project);
+        setIsChatbotOpen(true);
+    }, []);
+
+    const handleDialogChange = useCallback((open: boolean) => {
+        setIsChatbotOpen(open);
+        if (!open) {
+            setProjectForSearch(null);
+        }
+    }, []);
+
     const renderProjectList = () => {
         if (projectsLoading) {
             return (
@@ -85,7 +99,7 @@ export default function DashboardComponent() {
         return (
             <div className={styles.projectGrid}>
                 {projects.map(project => (
-                    <ProjectCard key={project.id} project={project}/>
+                    <ProjectCard key={project.id} project={project} onFindTalent={handleFindTalent}/>
                 ))}
             </div>
         );
@@ -112,7 +126,10 @@ export default function DashboardComponent() {
                 <CardContent className={styles.welcomeCardContent}>
                     <p>Ready to start a new project? Click the button below to describe your needs to
                         our AI assistant.</p>
-                    <Button onClick={() => setIsChatbotOpen(true)} size="lg" disabled={!isAuthenticated}>
+                    <Button onClick={() => {
+                        setProjectForSearch(null);
+                        setIsChatbotOpen(true);
+                    }} size="lg" disabled={!isAuthenticated}>
                         Publish New Task
                     </Button>
                 </CardContent>
@@ -125,7 +142,8 @@ export default function DashboardComponent() {
 
             <ChatbotDialog
                 isOpen={isChatbotOpen}
-                onOpenChange={setIsChatbotOpen}
+                onOpenChange={handleDialogChange}
+                projectForTalentSearch={projectForSearch}
                 avatarSrc={user?.image || undefined}
             />
         </div>

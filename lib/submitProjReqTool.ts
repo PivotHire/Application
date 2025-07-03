@@ -19,9 +19,9 @@ export const submitProjReqTool: ChatCompletionTool = {
                 skillsRequired: {
                     type: "array",
                     items: {
-                        type: "string",
+                        type: "integer",
                     },
-                    description: "A list of specific skills or technologies needed for the project, e.g., ['React', 'Node.js', 'PostgreSQL', 'UI/UX Design'].",
+                    description: "An array of skill IDs that correspond to the required skills for the project. The available skills and their IDs will be provided in the context.",
                 },
                 budget: {
                     type: "string",

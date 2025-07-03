@@ -3,44 +3,83 @@ import {db} from "@/lib/db";
 import {z} from "zod";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
+import {sql} from "kysely";
 
 const projectSchema = z.object({
     projectName: z.string().min(1, "Project name is required"),
     projectDescription: z.string().min(1, "Project description is required"),
-    skillsRequired: z.array(z.string()).min(1, "At least one skill is required."),
+    skillsRequired: z.array(z.number()).min(1, "At least one skill is required."),
     budget: z.string().optional(),
     timeline: z.string().optional(),
     notes: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
+    const session = await auth.api.getSession({
+
+        headers: await headers()
+
+    });
+    if (!session?.user?.id) {
+        return NextResponse.json({error: 'Unauthorized: You must be logged in.'}, {status: 401});
+    }
+    const {id} = session.user;
+
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
         const body = await req.json();
-        // console.log(body);
         const projectData = projectSchema.parse(body);
         const {projectName, projectDescription, skillsRequired, budget, timeline, notes} = projectData;
-        const newProject = await db.insertInto("projects")
-            .values({
-                user_id: session?.user?.id,
-                project_name: projectName,
-                project_description: projectDescription,
-                skills_required: skillsRequired,
-                budget: budget || null,
-                timeline: timeline || null,
-                status: "open",
-            })
-            .returning(["id", "created_at", "project_name"])
-            .executeTakeFirstOrThrow();
+
+        const result = await db.transaction().execute(async (trx) => {
+            const newProject = await trx
+                .insertInto("projects")
+                .values({
+                    user_id: id,
+                    project_name: projectName,
+                    project_description: projectDescription,
+                    budget: budget || null,
+                    timeline: timeline || null,
+                    notes: notes || null,
+                    status: "open",
+                })
+                .returningAll()
+                .executeTakeFirstOrThrow();
+
+            const skills = await trx
+                .selectFrom('skills')
+                .select('id')
+                .where('id', 'in', skillsRequired)
+                .execute();
+
+            if (skills.length !== skillsRequired.length) {
+                throw new Error("One or more provided skills are invalid.");
+            }
+
+            if (skillsRequired.length > 0) {
+                const projectSkillsData = skillsRequired.map(skillId => ({
+                    project_id: newProject.id,
+                    skill_id: skillId,
+                }));
+                await trx.insertInto('project_skills').values(projectSkillsData).execute();
+            }
+
+            const skillDetails = await trx.selectFrom('skills')
+                .select('name')
+                .where('id', 'in', skillsRequired)
+                .execute();
+
+            const skillNames = skillDetails.map(s => s.name);
+
+            return {...newProject, skills_required: skillNames};
+        });
+
         return NextResponse.json({
             message: 'Project published successfully!',
-            project: newProject
+            project: result
         }, {status: 201});
-    } catch (error) {
+
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
-            console.error("Validation Error:", error.flatten().fieldErrors);
             return NextResponse.json({
                 error: "Invalid project data provided.",
                 details: error.flatten().fieldErrors
@@ -60,20 +99,33 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
     try {
         const session = await auth.api.getSession({
+
             headers: await headers()
+
         });
         if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({error: 'Unauthorized'}, {status: 401});
         }
-        const { id } = session.user;
+        const {id} = session.user;
 
         const projects = await db.selectFrom('projects')
+            .selectAll('projects')
             .where('user_id', '=', id)
-            .selectAll()
-            .orderBy('created_at', 'desc')
+            .select((eb) => [
+                sql<string[]>`(SELECT json_agg(skills.name)
+                               FROM project_skills
+                                        JOIN skills ON skills.id = project_skills.skill_id
+                               WHERE project_skills.project_id = projects.id)`.as('skills_required')
+            ])
+            .orderBy('projects.created_at', 'desc')
             .execute();
 
-        return NextResponse.json(projects);
+        const projectsWithSkills = projects.map(p => ({
+            ...p,
+            skills_required: p.skills_required || []
+        }));
+
+        return NextResponse.json(projectsWithSkills);
 
     } catch (error: unknown) {
         console.error("Error fetching projects:", error);
@@ -81,6 +133,6 @@ export async function GET(req: NextRequest) {
         if (error instanceof Error) {
             errorMessage = error.message;
         }
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        return NextResponse.json({error: errorMessage}, {status: 500});
     }
 }

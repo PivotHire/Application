@@ -26,7 +26,6 @@ import Image from "next/image";
 import {authClient} from "@/lib/auth-client";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 
 const items = [
@@ -45,7 +44,7 @@ const {data: session} = await authClient.getSession();
 
 export default function AppSidebar(props: SidebarProps) {
 
-    const isLoading = session === undefined;
+    const isLoading = session?.user === undefined;
     const router = useRouter();
 
     const {toggleSidebar} = useSidebar();

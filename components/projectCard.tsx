@@ -10,21 +10,23 @@ import styles from '../app/styles/projectCard.module.scss';
 
 export type Project = {
     id: number;
-    user_id: string | undefined;
+    user_id: string;
     project_name: string;
     project_description: string;
-    skills_required: string[];
     budget: string | null;
     timeline: string | null;
+    skills_required: number[] | null;
     status: string;
     created_at: Date;
+    notes: string | null;
 };
 
 interface ProjectCardProps {
     project: Project;
+    onFindTalent: (project: Project) => void;
 }
 
-export function ProjectCard({project}: ProjectCardProps) {
+export function ProjectCard({project, onFindTalent}: ProjectCardProps) {
     const formattedDate = new Date(project.created_at).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -47,7 +49,7 @@ export function ProjectCard({project}: ProjectCardProps) {
                     {project.project_description}
                 </p>
                 <div className={styles.skillsContainer}>
-                    {project.skills_required.map(skill => (
+                    {project.skills_required?.map(skill => (
                         <Badge key={skill} variant="outline">{skill}</Badge>
                     ))}
                 </div>
@@ -75,7 +77,7 @@ export function ProjectCard({project}: ProjectCardProps) {
             </CardContent>
             <CardFooter className={styles.footer}>
                 <Button variant="secondary">Manage</Button>
-                <Button>Find Talent</Button>
+                <Button onClick={() => onFindTalent(project)}>Find Talent</Button>
             </CardFooter>
         </Card>
     );

@@ -1,5 +1,5 @@
 
-@import "variables";
+@use "variables";
 
 .sidebar {
     position: fixed;
@@ -26,7 +26,7 @@
     justify-content: center;
 
     &:hover {
-        background-color: $sidebar-accent;
+        background-color: variables.$sidebar-accent;
     }
 
     .triggerIcon {

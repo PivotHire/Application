@@ -3,7 +3,8 @@ import OpenAI from 'openai';
 import {ChatCompletionMessageParam} from 'openai/resources/chat/completions';
 import {submitProjReqTool} from "@/lib/submitProjReqTool";
 import {db} from "@/lib/db";
-import {authClient} from "@/lib/auth-client";
+import { headers } from "next/headers";
+import {auth} from "@/lib/auth";
 
 if (!process.env.OPENAI_API_KEY) {
     console.error("ERROR: OPENAI_API_KEY is not set in environment variables.");
@@ -13,10 +14,12 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-export const runtime = 'edge';
-const {data: session} = await authClient.getSession();
+// export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
     if (!process.env.OPENAI_API_KEY) {
         return NextResponse.json({error: 'Server configuration error: Missing API key.'}, {status: 500});
     }

@@ -5,7 +5,7 @@ import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { z } from "zod";
 import { sql } from "kysely";
 import {auth} from "@/lib/auth";
-import {authClient} from "@/lib/auth-client";
+import { headers } from "next/headers";
 
 const projectRequirementsSchema = z.object({
     project_description: z.string(),
@@ -13,17 +13,18 @@ const projectRequirementsSchema = z.object({
 });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-export const runtime = 'edge';
-
-const {data: session} = await authClient.getSession();
+// export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
     try {
         if (session?.user === undefined) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        console.log(req);
         const body = await req.json();
+        // console.log(body.project);
         const project = projectRequirementsSchema.parse(body.project);
         const conversationHistory: ChatCompletionMessageParam[] = body.messages || [];
 
@@ -40,8 +41,8 @@ export async function POST(req: NextRequest) {
                 'talent_profiles.headline',
                 'talent_profiles.bio',
                 'talent_profiles.years_of_experience',
-                'user.username',
-                'user.avatar_url'
+                'user.name',
+                'user.image'
             ]);
 
         if (skillIds.length > 0) {

@@ -1,5 +1,5 @@
 
-@import "variables";
+@use "variables";
 
 .footer {
     background-color: hsl(var(--muted));
@@ -19,7 +19,7 @@
     justify-content: space-between;
     gap: 1rem;
 
-    @media (min-width: $breakpoint-sm) {
+    @media (min-width: variables.$breakpoint-sm) {
         flex-direction: row;
         padding-left: 1.5rem;
         padding-right: 1.5rem;
@@ -35,7 +35,7 @@
     display: flex;
     gap: 1rem;
 
-    @media (min-width: $breakpoint-sm) {
+    @media (min-width: variables.$breakpoint-sm) {
         margin-left: auto;
     }
 }

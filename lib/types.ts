@@ -18,11 +18,10 @@ export interface Database {
 
 export interface UserTable {
     id: Generated<string>;
-    username: string;
+    name: string;
     email: string;
     password_hash: string;
-    nick_name: string | null;
-    avatar_url: string | null;
+    image: string | null;
     account_type: number; // 1=Business, 2=Talent, 3=Admin, 4=Both
     created_at: ColumnType<Date, string | undefined, never>;
 }

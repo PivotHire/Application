@@ -1,6 +1,5 @@
 import type {Metadata} from 'next';
-import DashboardComponent from '../../../components/dashboardComponent';
-import {authClient} from "@/lib/auth-client";
+import DashboardComponent from '@/components/dashboardComponent';
 
 export const metadata: Metadata = {
     title: 'Dashboard',

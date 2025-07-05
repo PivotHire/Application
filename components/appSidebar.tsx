@@ -30,8 +30,8 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {useRouter} from "next/navigation";
 
 const items = [
-    {title: "Home", url: "#", icon: Home},
-    {title: "Projects", url: "#", icon: FolderClosed},
+    {title: "Home", url: "dashboard", icon: Home},
+    {title: "Projects", url: "projects", icon: FolderClosed},
     {title: "Notification", url: "#", icon: MessageSquareDot},
     {title: "Billing", url: "#", icon: Wallet},
     {title: "Settings", url: "#", icon: Settings},

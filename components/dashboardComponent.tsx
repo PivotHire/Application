@@ -29,27 +29,43 @@ export default function DashboardComponent() {
         }
     }, [isLoading]);
 
+    useEffect(() => {
+        const fetchCurrentAccountType = async () => {
+            if (isAuthenticated) {
+                try {
+                    const response = await fetch('/api/account');
+                    // console.log("Response from /api/account:", response.json());
+                    if (!response.ok) {
+                        throw new Error('Internal server error when fetching account type.');
+                    }
+                    const accountType = await response.json();
+                    if (accountType == 1) {
+                        localStorage.setItem('accountIdentity', "Business");
+                    } else if (accountType == 2) {
+                        localStorage.setItem('accountIdentity', "Talent");
+                    } else if (accountType == 3) {
+                        localStorage.setItem('accountIdentity', "Admin");
+                    }
+                    if (accountType >= 0 && accountType <= 4) {
+                        localStorage.setItem('accountType', accountType.toString());
+                    } else {
+                        localStorage.removeItem('accountType');
+                        throw new Error('Invalid account type.');
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch account type:", error);
+                }
+            }
+        };
+        fetchCurrentAccountType();
+    }, [isAuthenticated]);
+
     const handleDialogChange = useCallback((open: boolean) => {
         setIsChatbotOpen(open);
-        if (!open) {
-
-        }
     }, []);
-
 
     return (
         <div className={styles.contentContainer}>
-            <header className={styles.header}>
-                <div className={styles.headerLogoGroup}>
-                    <Image
-                        src={'/logo-light-transparent.svg'}
-                        alt="PivotHire AI Logo"
-                        width={200}
-                        height={100}
-                    />
-                </div>
-            </header>
-
             <Card>
                 <CardHeader>
                     <CardTitle className="flex">Welcome, {!isAuthenticated ? <Skeleton className="w-[100px] h-[15px] rounded-sm" /> : (user?.name || "User")}!</CardTitle>

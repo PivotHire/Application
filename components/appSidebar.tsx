@@ -9,9 +9,10 @@ import {
 } from "@/components/ui/sidebar"
 
 import {
+    BadgeCheck,
     Calendar,
     ChevronLeft,
-    ChevronUp, FolderClosed,
+    ChevronUp, FileUser, FolderClosed,
     Home,
     Inbox, MessageSquareDot,
     PanelLeftClose,
@@ -29,12 +30,20 @@ import {Skeleton} from "@/components/ui/skeleton";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {useRouter} from "next/navigation";
 
-const items = [
+const BusinessEntries = [
     {title: "Home", url: "dashboard", icon: Home},
     {title: "Projects", url: "projects", icon: FolderClosed},
+    {title: "Verification", url: "#", icon: BadgeCheck},
     {title: "Notification", url: "#", icon: MessageSquareDot},
     {title: "Billing", url: "#", icon: Wallet},
-    {title: "Settings", url: "#", icon: Settings},
+    {title: "Profile", url: "#", icon: FileUser},
+];
+
+const TalentEntries = [
+    {title: "Home", url: "dashboard", icon: Home},
+    {title: "Verification", url: "#", icon: BadgeCheck},
+    {title: "Notification", url: "#", icon: MessageSquareDot},
+    {title: "Profile", url: "/profile", icon: FileUser},
 ];
 
 interface SidebarProps {
@@ -47,6 +56,7 @@ export default function AppSidebar(props: SidebarProps) {
 
     const isLoading = session?.user === undefined;
     const router = useRouter();
+    const accountIdentity = localStorage.getItem('accountIdentity') || "Business";
 
     const {toggleSidebar} = useSidebar();
 
@@ -56,6 +66,20 @@ export default function AppSidebar(props: SidebarProps) {
         }).catch(error => {
             console.error("Logout failed:", error);
         });
+    }
+
+    const handleSwitchIdentity = () => {
+        console.log(accountIdentity);
+        if (accountIdentity === "Business") {
+            localStorage.setItem('accountIdentity', "Talent");
+        } else if (accountIdentity === "Talent") {
+            localStorage.setItem('accountIdentity', "Business");
+        }
+        if (window.location.pathname === "/dashboard") {
+            window.location.reload();
+        } else {
+            router.push("/dashboard");
+        }
     }
 
     return (
@@ -72,7 +96,7 @@ export default function AppSidebar(props: SidebarProps) {
                     <SidebarGroupLabel>Application</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
+                            {(accountIdentity === "Business" ? BusinessEntries : TalentEntries).map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
                                         <a href={item.url}>
@@ -105,8 +129,8 @@ export default function AppSidebar(props: SidebarProps) {
                                 <DropdownMenuItem>
                                     <span>Account</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <span>Billing</span>
+                                <DropdownMenuItem onClick={handleSwitchIdentity}>
+                                    <span>Switch Identity</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleLogout}>
                                     <span>Sign out</span>

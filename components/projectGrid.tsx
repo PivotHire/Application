@@ -94,16 +94,6 @@ export default function ProjectGrid() {
 
     return (
         <div className={styles.contentContainer}>
-            <header className={styles.header}>
-                <div className={styles.headerLogoGroup}>
-                    <Image
-                        src={'/logo-light-transparent.svg'}
-                        alt="PivotHire AI Logo"
-                        width={200}
-                        height={100}
-                    />
-                </div>
-            </header>
             <div className={styles.projectsSection}>
                 <h2 className={styles.projectsTitle}>Your Projects</h2>
                 {renderProjectList()}

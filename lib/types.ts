@@ -22,8 +22,25 @@ export interface UserTable {
     email: string;
     password_hash: string;
     image: string | null;
-    account_type: number; // 1=Business, 2=Talent, 3=Admin, 4=Both
+    account_type: number; // 0=None, 1=Business, 2=Talent, 3=Admin, 4=Both
     created_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface BusinessTable {
+    id: Generated<number>;
+    name: string;
+    description: string | null;
+    logo_url: string | null;
+    website_url: string | null;
+    verified: ColumnType<boolean, boolean | undefined, boolean>;
+    created_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface BusinessMemberTable {
+    business_id: number;
+    user_id: string;
+    role: 'admin' | 'hiring_manager' | 'member';
+    joined_at: ColumnType<Date, string | undefined, never>;
 }
 
 export interface ProjectTable {
@@ -77,6 +94,8 @@ export interface ProjectSkillTable {
 
 export interface Database {
     user: UserTable;
+    businesses: BusinessTable;
+    business_members: BusinessMemberTable;
     projects: ProjectTable;
     talent_profiles: TalentProfileTable;
     skills: SkillTable;
@@ -87,6 +106,14 @@ export interface Database {
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdateUser = Updateable<UserTable>;
+
+export type Business = Selectable<BusinessTable>;
+export type NewBusiness = Insertable<BusinessTable>;
+export type UpdateBusiness = Updateable<BusinessTable>;
+
+export type BusinessMember = Selectable<BusinessMemberTable>;
+export type NewBusinessMember = Insertable<BusinessMemberTable>;
+export type UpdateBusinessMember = Updateable<BusinessMemberTable>;
 
 export type Project = Selectable<ProjectTable>;
 export type NewProject = Insertable<ProjectTable>;

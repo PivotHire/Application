@@ -1,0 +1,107 @@
+@use "variables";
+
+.contentContainer {
+    flex-grow: 1;
+    //max-width: $container-max-width;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.5rem;
+
+    @media (min-width: variables.$breakpoint-md) {
+        padding: 1rem;
+    }
+}
+
+.cardContent {
+    p {
+        margin-bottom: 1.5rem;
+    }
+}
+
+.fieldsGrid {
+    display: grid;
+    gap: 1rem;
+}
+
+.inputGroup {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.salaryInputGroup {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.labelRow {
+    display: flex;
+    align-items: center;
+
+    .forgotPasswordLink {
+        margin-left: auto;
+        font-size: 0.875rem;
+        text-decoration-line: underline;
+        &:hover {
+            text-decoration-color: hsl(var(--primary));
+        }
+    }
+}
+
+.submitButton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .spinner {
+        margin-right: 0.5rem;
+        height: 1rem;
+        width: 1rem;
+        animation: spin 1s linear infinite;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.entryCard {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.entryHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.degreeLevel {
+    //font-weight: 700; // semibold
+    //font-size: 1.125rem; // text-lg
+}
+
+.entryGrid {
+    display: grid;
+    gap: 1rem;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.addEntryButton {
+    margin-top: 0.75rem;
+    align-self: flex-start;
+}

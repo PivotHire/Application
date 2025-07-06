@@ -9,3 +9,17 @@
 .mainContent {
     flex-grow: 1;
 }
+
+.header {
+    margin-top: 1rem;
+    margin-left: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.headerLogoGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}

@@ -29,6 +29,7 @@ import {authClient} from "@/lib/auth-client";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {useRouter} from "next/navigation";
+import {useEffect, useState} from "react";
 
 const BusinessEntries = [
     {title: "Home", url: "dashboard", icon: Home},
@@ -56,7 +57,11 @@ export default function AppSidebar(props: SidebarProps) {
 
     const isLoading = session?.user === undefined;
     const router = useRouter();
-    const accountIdentity = localStorage.getItem('accountIdentity') || "Business";
+    const [ accountIdentity, setAccountIdentity ] = useState("");
+
+    useEffect(() => {
+        setAccountIdentity(localStorage.getItem('accountIdentity') || "Business");
+    }, []);
 
     const {toggleSidebar} = useSidebar();
 

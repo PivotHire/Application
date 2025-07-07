@@ -58,7 +58,7 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        alert("Submitted!");
+        console.log("edu"+education);
         setTimeout(() => setIsSubmitting(false), 1000);
     }
 

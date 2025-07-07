@@ -5,7 +5,7 @@ import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
-import {Check, ChevronsUpDown, Loader2, Trash2} from "lucide-react";
+import {CalendarIcon, Check, ChevronsUpDown, Loader2, Trash2} from "lucide-react";
 import React, {useEffect, useState} from "react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
@@ -22,7 +22,9 @@ import {
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {cn} from "@/lib/utils";
 import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList} from "@/components/ui/command";
-import { Separator } from "@/components/ui/separator";
+import {Separator} from "@/components/ui/separator";
+import {MonthPicker} from "@/components/ui/monthpicker";
+import {format} from "date-fns/format";
 
 type EducationEntry = {
     id: string;
@@ -456,20 +458,17 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
     }
 
     const [educationEntries, setEducationEntries] = useState<EducationEntry[]>([
-        // Start with one default entry
-        { id: crypto.randomUUID(), degreeLevel: 'Bachelor', school: '', major: '', startDate: '', endDate: '' }
+        // { id: crypto.randomUUID(), degreeLevel: 'Bachelor', school: '', major: '', startDate: '', endDate: '' }
     ]);
 
-    // This useEffect hook provides the final JSON string output whenever data changes.
     useEffect(() => {
-        // The output is now a simple array of the education details.
         setEducation(JSON.stringify(educationEntries, null, 2));
     }, [educationEntries, setEducation]);
 
     const handleAddEntry = () => {
         setEducationEntries(prev => [
             ...prev,
-            { id: crypto.randomUUID(), degreeLevel: '', school: '', major: '', startDate: '', endDate: '' }
+            {id: crypto.randomUUID(), degreeLevel: '', school: '', major: '', startDate: '', endDate: ''}
         ]);
     };
 
@@ -480,7 +479,7 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
     const handleEntryChange = (id: string, field: keyof EducationEntry, value: string) => {
         setEducationEntries(prev =>
             prev.map(entry =>
-                entry.id === id ? { ...entry, [field]: value } : entry
+                entry.id === id ? {...entry, [field]: value} : entry
             )
         );
     };
@@ -613,91 +612,113 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                             <div className={styles.inputGroup}>
                                 <Label htmlFor="bio">Education</Label>
                                 {educationEntries.map((entry, index) => (
-                                    <div key={entry.id} className={styles.entryCard}>
-                                        <div className={styles.entryHeader}>
-                                            <p className={styles.degreeLevel}>
+                                    <Card key={entry.id}>
+                                        <CardHeader className={styles.entryHeader}>
+                                            <span className={styles.degreeLevel}>
                                                 {entry.degreeLevel ? `${entry.degreeLevel} Degree` : `Education Entry #${index + 1}`}
-                                            </p>
-                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveEntry(entry.id)}>
-                                                <Trash2 className="h-4 w-4 text-muted-foreground" />
+                                            </span>
+                                            <Button variant="ghost" size="icon"
+                                                    onClick={() => handleRemoveEntry(entry.id)}>
+                                                <Trash2 className="h-4 w-4 text-muted-foreground"/>
                                             </Button>
-                                        </div>
-                                        <Separator />
-                                        <div className={styles.inputGroup}>
-                                            <Label>Degree Level</Label>
-                                            <Select
-                                                value={entry.degreeLevel}
-                                                onValueChange={(value) => handleEntryChange(entry.id, 'degreeLevel', value)}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a degree" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Bachelor">Bachelor's</SelectItem>
-                                                    <SelectItem value="Master">Master's</SelectItem>
-                                                    <SelectItem value="Doctorate">Doctorate (PhD)</SelectItem>
-                                                    <SelectItem value="Other">Other</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className={styles.inputGroup}>
-                                            <Label htmlFor={`school-${entry.id}`}>School / University</Label>
-                                            <Input
-                                                id={`school-${entry.id}`}
-                                                placeholder="e.g., University of Example"
-                                                value={entry.school}
-                                                onChange={(e) => handleEntryChange(entry.id, 'school', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className={styles.inputGroup}>
-                                            <Label htmlFor={`major-${entry.id}`}>Field of Study / Major</Label>
-                                            <Input
-                                                id={`major-${entry.id}`}
-                                                placeholder="e.g., Computer Science"
-                                                value={entry.major}
-                                                onChange={(e) => handleEntryChange(entry.id, 'major', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className={styles.entryGrid}>
+                                        </CardHeader>
+                                        <CardContent className={styles.fieldsGrid}>
                                             <div className={styles.inputGroup}>
-                                                <Label htmlFor={`start-date-${entry.id}`}>Start Date</Label>
+                                                <Label>Degree Level</Label>
+                                                <Select
+                                                    value={entry.degreeLevel}
+                                                    onValueChange={(value: string) => handleEntryChange(entry.id, 'degreeLevel', value)}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select a degree"/>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Bachelor">Bachelor's</SelectItem>
+                                                        <SelectItem value="Master">Master's</SelectItem>
+                                                        <SelectItem value="Doctorate">Doctorate (PhD)</SelectItem>
+                                                        <SelectItem value="Other">Other</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className={styles.inputGroup}>
+                                                <Label htmlFor={`school-${entry.id}`}>School / University</Label>
                                                 <Input
-                                                    id={`start-date-${entry.id}`}
-                                                    type="month"
-                                                    value={entry.startDate}
-                                                    onChange={(e) => handleEntryChange(entry.id, 'startDate', e.target.value)}
+                                                    id={`school-${entry.id}`}
+                                                    placeholder="e.g., University of Example"
+                                                    value={entry.school}
+                                                    onChange={(e) => handleEntryChange(entry.id, 'school', e.target.value)}
                                                 />
                                             </div>
                                             <div className={styles.inputGroup}>
-                                                <Label htmlFor={`end-date-${entry.id}`}>End Date (or expected)</Label>
+                                                <Label htmlFor={`major-${entry.id}`}>Field of Study / Major</Label>
                                                 <Input
-                                                    id={`end-date-${entry.id}`}
-                                                    type="month"
-                                                    value={entry.endDate}
-                                                    onChange={(e) => handleEntryChange(entry.id, 'endDate', e.target.value)}
+                                                    id={`major-${entry.id}`}
+                                                    placeholder="e.g., Computer Science"
+                                                    value={entry.major}
+                                                    onChange={(e) => handleEntryChange(entry.id, 'major', e.target.value)}
                                                 />
                                             </div>
-                                        </div>
-                                    </div>
+                                            <div className={styles.entryGrid}>
+                                                <div className={styles.inputGroup}>
+                                                    <Label htmlFor={`start-date-${entry.id}`}>Start Date</Label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant={"outline"}
+                                                                    className={cn("justify-start text-left font-normal", !entry.startDate && "text-muted-foreground")}>
+                                                                <CalendarIcon className="mr-2 h-4 w-4"/>
+                                                                {entry.startDate ? format(entry.startDate, "MMM yyyy") :
+                                                                    <span>Pick a month</span>}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="p-0">
+                                                            <MonthPicker
+                                                                onMonthSelect={(e) => handleEntryChange(entry.id, 'startDate', e.toString())}
+                                                                selectedMonth={entry.startDate ? new Date(entry.startDate) : new Date()}/>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                                <div className={styles.inputGroup}>
+                                                    <Label htmlFor={`end-date-${entry.id}`}>End Date (or
+                                                        expected)</Label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant={"outline"}
+                                                                    className={cn("justify-start text-left font-normal", !entry.endDate && "text-muted-foreground")}>
+                                                                <CalendarIcon className="mr-2 h-4 w-4"/>
+                                                                {entry.endDate ? format(entry.endDate, "MMM yyyy") :
+                                                                    <span>Pick a month</span>}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="p-0">
+                                                            <MonthPicker
+                                                                onMonthSelect={(e) => handleEntryChange(entry.id, 'endDate', e.toString())}
+                                                                selectedMonth={entry.endDate ? new Date(entry.endDate) : new Date()}/>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
                                 ))}
-                                <Button variant="outline" size="sm" onClick={handleAddEntry} className={styles.addEntryButton}>
+                                <Button variant="outline" size="sm" onClick={handleAddEntry}
+                                        className={styles.addEntryButton}>
                                     + Add Education
                                 </Button>
                             </div>
                             <div className={styles.inputGroup}>
-                                <Label htmlFor="bio">Portfolio</Label>
+                                <Label htmlFor="portfolio">Portfolio</Label>
                                 <Textarea
-                                    id="bio"
-                                    placeholder="Write your bio here."
+                                    id="portfolio"
+                                    placeholder="Briefly describe your projects and experiences."
                                     required
                                     disabled={isSubmitting}
                                 />
                             </div>
                             <div className={styles.inputGroup}>
-                                <Label htmlFor="bio">Remarks</Label>
+                                <Label htmlFor="remarks">Remarks</Label>
                                 <Textarea
-                                    id="bio"
-                                    placeholder="Write your bio here."
+                                    id="remarks"
+                                    placeholder="Write here if you have any special requests or notes."
                                     required
                                     disabled={isSubmitting}
                                 />

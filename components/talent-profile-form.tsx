@@ -501,6 +501,8 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                     type="text"
                                     placeholder="Discribe yourself in a single line."
                                     required
+                                    value={headline}
+                                    onChange={(e) => setHeadline(e.target.value)}
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -510,6 +512,8 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                     id="bio"
                                     placeholder="Write your bio here."
                                     required
+                                    value={bio}
+                                    onChange={(e) => setBio(e.target.value)}
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -528,12 +532,14 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                     type="number"
                                     placeholder="How many years have you been working in this field? (excluding freelancing and gapping)"
                                     required
+                                    value={yearsOfExperience ?? ''}
+                                    onChange={(e) => setYearsOfExperience(e.target.value ? parseInt(e.target.value) : null)}
                                     disabled={isSubmitting}
                                 />
                             </div>
                             <div className={styles.inputGroup}>
                                 <Label htmlFor="available-time">Available Time</Label>
-                                <Select>
+                                <Select onValueChange={setAvailability} defaultValue={availability}>
                                     <SelectTrigger className="w-[300px]">
                                         <SelectValue placeholder="Select your available time"/>
                                     </SelectTrigger>
@@ -554,6 +560,8 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                     type="number"
                                     placeholder="How many hours do you typically work everyday?"
                                     required
+                                    value={workHoursTypical ?? ''}
+                                    onChange={(e) => setWorkHoursTypical(e.target.value ? parseInt(e.target.value) : null)}
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -564,6 +572,8 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                     type="number"
                                     placeholder="How many hours do you max work everyday?"
                                     required
+                                    value={workHoursMax ?? ''}
+                                    onChange={(e) => setWorkHoursMax(e.target.value ? parseInt(e.target.value) : null)}
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -575,6 +585,8 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                         type="number"
                                         placeholder="Min."
                                         required
+                                        value={salaryMin ?? ''}
+                                        onChange={(e) => setSalaryMin(e.target.value ? parseInt(e.target.value) : null)}
                                         className={cn("w-[150px]")}
                                         disabled={isSubmitting}
                                     />
@@ -584,10 +596,12 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                         type="number"
                                         placeholder="Max."
                                         required
+                                        value={salaryMax ?? ''}
+                                        onChange={(e) => setSalaryMax(e.target.value ? parseInt(e.target.value) : null)}
                                         className={cn("w-[150px]")}
                                         disabled={isSubmitting}
                                     />
-                                    <Select>
+                                    <Select onValueChange={setSalaryCurrency} defaultValue={salaryCurrency}>
                                         <SelectTrigger className="w-[300px]">
                                             <SelectValue placeholder="Preferred Currency"/>
                                         </SelectTrigger>
@@ -711,6 +725,8 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                     id="portfolio"
                                     placeholder="Briefly describe your projects and experiences."
                                     required
+                                    value={portfolio}
+                                    onChange={(e) => setPortfolio(e.target.value)}
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -720,6 +736,8 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                     id="remarks"
                                     placeholder="Write here if you have any special requests or notes."
                                     required
+                                    value={remarks}
+                                    onChange={(e) => setRemarks(e.target.value)}
                                     disabled={isSubmitting}
                                 />
                             </div>

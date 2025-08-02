@@ -25,6 +25,7 @@ import {Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandL
 import {Separator} from "@/components/ui/separator";
 import {MonthPicker} from "@/components/ui/monthpicker";
 import {format} from "date-fns/format";
+import {authClient} from "@/lib/auth-client";
 
 type EducationEntry = {
     id: string;
@@ -35,12 +36,14 @@ type EducationEntry = {
     endDate: string;
 };
 
+const {data: session} = await authClient.getSession();
+
 export function TalentProfileForm() { // headline, bio, location, languages, years of exp, available time, work hours typ, work hours max, salary min, salary max, salary currency, education, portfolio, remarks
 
     const [headline, setHeadline] = useState("");
     const [bio, setBio] = useState("");
     const [location, setLocation] = useState("");
-    const [languages, setLanguages] = useState("");
+    const [languages, setLanguages] = useState<string[]>([]);
     const [yearsOfExperience, setYearsOfExperience] = useState<number | null>(null);
     const [availability, setAvailability] = useState("");
     const [workHoursTypical, setWorkHoursTypical] = useState<number | null>(null);
@@ -55,12 +58,85 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const [oldProfile, setOldProfile] = useState(false);
+
+    useEffect(() => {
+        async function fetchOldProfile() {
+            try {
+                const response = await fetch('/api/talent/profile');
+                if (response.ok) {
+                    const data = await response.json();
+                    setOldProfile(data);
+                    setHeadline(data.headline || "");
+                    setBio(data.bio || "");
+                    setLocation(data.location || "");
+                    setLanguages(data.languages || []);
+                    setYearsOfExperience(data.years_of_experience || null);
+                    setAvailability(data.availability || "");
+                    setWorkHoursTypical(data.work_hours_typical || null);
+                    setWorkHoursMax(data.work_hours_max || null);
+                    setSalaryMin(data.salary_min || null);
+                    setSalaryMax(data.salary_max || null);
+                    setSalaryCurrency(data.salary_currency || "");
+                    setEducation(data.education || "");
+                    setPortfolio(data.portfolio || "");
+                    setRemarks(data.remarks || "");
+                    console.log(data);
+                }
+            } catch (err: any) {
+                console.error("Error fetching old profile:", err);
+            }
+        }
+        fetchOldProfile();
+        console.log("lang1" + languages);
+        console.log(oldProfile);
+    }, [session]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        console.log("edu"+education);
-        setTimeout(() => setIsSubmitting(false), 1000);
-    }
+        setError(null);
+
+        const payload = {
+            headline,
+            bio,
+            location,
+            languages,
+            yearsOfExperience,
+            availability,
+            workHoursTypical,
+            workHoursMax,
+            salaryMin,
+            salaryMax,
+            salaryCurrency,
+            education,
+            portfolio,
+            remarks,
+        };
+
+        try {
+            const response = await fetch('/api/talent/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'An unknown error occurred.');
+            }
+
+            console.log("Success:", result.message);
+            window.location.reload();
+
+        } catch (err: any) {
+            console.error("Failed to save profile:", err);
+            setError(err.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const locationList = [
         {label: "Afghanistan", value: "afghanistan"},
@@ -402,6 +478,7 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
     ] as const;
 
     const renderLanguageList = () => {
+        console.log("lang" + languages);
         return (
             <Popover>
                 <PopoverTrigger asChild>
@@ -410,12 +487,12 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                         role="combobox"
                         className={cn(
                             "w-[300px] justify-between",
-                            !languages && "text-muted-foreground"
+                            !(languages.length > 0) && "text-muted-foreground"
                         )}
                     >
                         {languages
                             ? languageList.find(
-                                (language) => language.value === languages
+                                (language) => language.value === (languages?.[0] || "")
                             )?.label
                             : "Select language"}
                         <ChevronsUpDown className="opacity-50"/>
@@ -435,14 +512,14 @@ export function TalentProfileForm() { // headline, bio, location, languages, yea
                                         value={language.label}
                                         key={language.value}
                                         onSelect={() => {
-                                            setLanguages(language.value)
+                                            setLanguages([language.value])
                                         }}
                                     >
                                         {language.label}
                                         <Check
                                             className={cn(
                                                 "ml-auto",
-                                                language.value === languages
+                                                language.value === (languages?.[0] || "")
                                                     ? "opacity-100"
                                                     : "opacity-0"
                                             )}

@@ -16,7 +16,7 @@ export const auth = betterAuth({
         updateAge: 60 * 60 * 24
     },
     // baseURL: "http://localhost:3000",
-    basePath: "/api/auth",
+    // basePath: "/api/auth",
     // socialProviders: {
     //     github: {
     //         clientId: process.env.GITHUB_CLIENT_ID as string,

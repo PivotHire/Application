@@ -70,7 +70,7 @@ export interface TalentProfileTable {
     salary_max: number | null;
     salary_currency: string | null;
     education: ColumnType<unknown, string, string> | null;
-    portfolio: ColumnType<unknown, string, string> | null;
+    portfolio: string | null;
     remarks: string | null;
     updated_at: ColumnType<Date, string | undefined, string | undefined>;
 }

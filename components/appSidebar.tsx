@@ -29,9 +29,7 @@ import {authClient} from "@/lib/auth-client";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {useRouter} from "next/navigation";
-import {atom, useAtom} from "jotai";
-import {accountIdentityAtom} from "@/lib/atoms";
-import {use, useEffect} from "react";
+import {useEffect, useState} from "react";
 
 const BusinessEntries = [
     {title: "Home", url: "dashboard", icon: Home},
@@ -59,7 +57,11 @@ export default function AppSidebar(props: SidebarProps) {
 
     const isLoading = session?.user === undefined;
     const router = useRouter();
-    const [accountIdentity, setAccountIdentity] = useAtom(accountIdentityAtom);
+    const [ accountIdentity, setAccountIdentity ] = useState("");
+
+    useEffect(() => {
+        setAccountIdentity(localStorage.getItem('accountIdentity') || "Business");
+    }, []);
 
     const {toggleSidebar} = useSidebar();
 
@@ -72,63 +74,17 @@ export default function AppSidebar(props: SidebarProps) {
     }
 
     const handleSwitchIdentity = () => {
-        setAccountIdentity(prev => (prev === "Business" ? "Talent" : "Business"));
-    };
-
-    const menuEntries = accountIdentity === "Business" ? BusinessEntries : TalentEntries;
-
-
-    const getMenuItems = () => {
-        if (isLoading) {
-            return (
-                <>
-                    <SidebarMenuItem key="Skeleton1">
-                        <SidebarMenuButton asChild>
-                            <a>
-                                <Skeleton className="w-[24px] h-[24px]"/>
-                                <span><Skeleton className="w-[96px] max-w-full h-[15px]"/></span>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem key="Skeleton2">
-                        <SidebarMenuButton asChild>
-                            <a>
-                                <Skeleton className="w-[24px] h-[24px]"/>
-                                <span><Skeleton className="w-[96px] max-w-full h-[15px]"/></span>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem key="Skeleton3">
-                        <SidebarMenuButton asChild>
-                            <a>
-                                <Skeleton className="w-[24px] h-[24px]"/>
-                                <span><Skeleton className="w-[96px] max-w-full h-[15px]"/></span>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem key="Skeleton4">
-                        <SidebarMenuButton asChild>
-                            <a>
-                                <Skeleton className="w-[24px] h-[24px]"/>
-                                <span><Skeleton className="w-[96px] max-w-full h-[15px]"/></span>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </>
-            );
+        console.log(accountIdentity);
+        if (accountIdentity === "Business") {
+            localStorage.setItem('accountIdentity', "Talent");
+        } else if (accountIdentity === "Talent") {
+            localStorage.setItem('accountIdentity', "Business");
         }
-        return (
-            menuEntries.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                        <a href={item.url}>
-                            <item.icon/>
-                            <span>{item.title}</span>
-                        </a>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            ))
-        );
+        if (window.location.pathname === "/dashboard") {
+            window.location.reload();
+        } else {
+            router.push("/dashboard");
+        }
     }
 
     return (
@@ -145,7 +101,16 @@ export default function AppSidebar(props: SidebarProps) {
                     <SidebarGroupLabel>Application</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {getMenuItems()}
+                            {(accountIdentity === "Business" ? BusinessEntries : TalentEntries).map((item) => (
+                                <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton asChild>
+                                        <a href={item.url}>
+                                            <item.icon/>
+                                            <span>{item.title}</span>
+                                        </a>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
@@ -161,8 +126,7 @@ export default function AppSidebar(props: SidebarProps) {
                                                      alt={session?.user?.name || "Avatar"}/>
                                         <AvatarFallback>{isLoading ? <Skeleton/> : <User2/>}</AvatarFallback>
                                     </Avatar>
-                                    {isLoading ? <Skeleton
-                                        className="w-[100px] h-[15px] rounded-sm"/> : (session?.user?.name || "Username")}
+                                    {isLoading ? <Skeleton className="w-[100px] h-[15px] rounded-sm" /> : (session?.user?.name || "Username")}
                                     <ChevronUp className="ml-auto"/>
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>

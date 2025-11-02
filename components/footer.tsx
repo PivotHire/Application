@@ -14,7 +14,7 @@ export function Footer() {
             <div className={styles.content}>
 
                 <p className={styles.copyrightText}>
-                    &copy; {currentYear} PivotHire. All rights reserved.
+                    &copy; {currentYear} PivotHire Inc. All rights reserved.
                 </p>
 
                 <nav className={styles.footerNav}>

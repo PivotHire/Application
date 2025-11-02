@@ -45,7 +45,7 @@ export function SignInForm() {
         try {
             const { data, error } = await authClient.signIn.email({ email, password });
             if (error) throw error;
-            if (data?.user) router.push('/dashboard');
+            if (data?.user) window.location.href = "/dashboard";
             else throw new Error("Login failed. Please check your credentials.");
         } catch (err: any) {
             setError(err.message || "An error occurred during login.");

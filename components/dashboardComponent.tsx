@@ -11,6 +11,8 @@ import {Project} from "@/lib/types";
 import {Skeleton} from "@/components/ui/skeleton";
 import {ProjectCard} from "@/components/projectCard";
 import styles from "../app/styles/dashboard.module.scss";
+import {atom, useAtom} from "jotai/index";
+import {accountIdentityAtom, accountTypeAtom} from "@/lib/atoms";
 
 const {data: session} = await authClient.getSession();
 
@@ -20,6 +22,8 @@ export default function DashboardComponent() {
     const isAuthenticated = session?.user !== undefined;
     const user = session?.user || null;
     const isLoading = session === undefined;
+    const [accountIdentity, setAccountIdentity] = useAtom(accountIdentityAtom);
+    const [accountType, setAccountType] = useAtom(accountTypeAtom);
 
     useEffect(() => {
         if (!isLoading) {
@@ -39,17 +43,18 @@ export default function DashboardComponent() {
                         throw new Error('Internal server error when fetching account type.');
                     }
                     const accountType = await response.json();
+                    console.log('Account Type', accountType);
                     if (accountType == 1) {
-                        localStorage.setItem('accountIdentity', "Business");
+                        setAccountIdentity("Business");
                     } else if (accountType == 2) {
-                        localStorage.setItem('accountIdentity', "Talent");
+                        setAccountIdentity("Talent");
                     } else if (accountType == 3) {
-                        localStorage.setItem('accountIdentity', "Admin");
+                        setAccountIdentity("Admin");
                     }
+                    console.log('Account Identity', accountIdentity);
                     if (accountType >= 0 && accountType <= 4) {
-                        localStorage.setItem('accountType', accountType.toString());
+                        setAccountType(accountType);
                     } else {
-                        localStorage.removeItem('accountType');
                         throw new Error('Invalid account type.');
                     }
                 } catch (error) {

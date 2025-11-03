@@ -11,7 +11,7 @@ export default function TermsOfUsePage() {
             <article className={styles.legalContent}>
                 <h1>Website Terms of Use</h1>
                 <p><strong>Version 1.0</strong></p>
-                <p><strong>Last revised on: November 3rd, 2025</strong></p>
+                <p><strong>Last Updated: November 3rd, 2025</strong></p>
                 <section>
                     <p>The website located at app.pivothire.tech (the “<strong>Site</strong>”) is a copyrighted work
                         belonging to PivotHire Inc. (“<strong>Company</strong>”, “<strong>us</strong>”,

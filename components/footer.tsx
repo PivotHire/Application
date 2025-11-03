@@ -7,17 +7,19 @@ import styles from '../app/styles/footer.module.scss';
 import {Github, Linkedin, Twitter} from "lucide-react";
 
 export function Footer() {
-    const currentYear = new Date().getFullYear();
 
     return (
         <footer className={styles.footer}>
             <div className={styles.content}>
 
                 <p className={styles.copyrightText}>
-                    &copy; {currentYear} PivotHire Inc. All rights reserved.
+                    &copy; {new Date().getFullYear() == 2025 ? 2025 : `2025-${new Date().getFullYear()}`} PivotHire Inc. All rights reserved.
                 </p>
 
                 <nav className={styles.footerNav}>
+                    <Link href="/terms-of-use" className={styles.navLink}>
+                        Terms of Use
+                    </Link>
                     <Link href="/privacy-policy" className={styles.navLink}>
                         Privacy Policy
                     </Link>
